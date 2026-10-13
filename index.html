@@ -39,6 +39,9 @@ h1 .od{display:block;font-family:"Noto Sans Oriya",sans-serif;font-weight:700;fo
 .key span{display:inline-flex;align-items:center;gap:8px}
 .sw{width:18px;height:14px;border-radius:3px;border:2px solid var(--field);background:var(--harvest)}
 .sw.off{background:transparent;border:1.5px dashed var(--soft)}
+.sw.live{animation:swb 3.6s ease-in-out infinite}
+@keyframes swb{0%,100%{background:rgba(255,212,0,.75);border-color:#00316B}50%{background:rgba(38,166,130,.7);border-color:#0E6B55}}
+.sw.pend{background:rgba(255,190,60,.35);border:2px dashed #9A6A00}
 
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
 .mapcard{position:relative;background:#fff;border-radius:14px;border:1px solid var(--rule);overflow:hidden;
@@ -48,12 +51,21 @@ h1 .od{display:block;font-family:"Noto Sans Oriya",sans-serif;font-weight:700;fo
 .stage img{user-select:none;-webkit-user-drag:none}
 path.d{fill:transparent;stroke:none;transition:fill .15s}
 path.d:hover{fill:var(--map-hover)}
-path.has{fill:rgba(255,212,0,.36);stroke:#00316B;stroke-width:3px;vector-effect:non-scaling-stroke;cursor:pointer;
-  animation:pulse 2.4s ease-in-out 2}
-path.has:hover,path.has.hot{fill:rgba(255,212,0,.78)}
-path.has:focus-visible{outline:none;stroke:#00316B;stroke-width:6px;fill:rgba(255,212,0,.78)}
-@keyframes pulse{50%{fill:rgba(255,212,0,.8)}}
-@media (prefers-reduced-motion:reduce){path.has{animation:none}}
+path.has{fill:rgba(255,212,0,.34);stroke:#00316B;stroke-width:3px;vector-effect:non-scaling-stroke;cursor:pointer;
+  transition:fill .2s ease,stroke-width .2s ease,filter .2s ease;animation:breathe 3.6s ease-in-out infinite}
+/* Baseline complete: a slow breath from gold toward a soft teal-green */
+@keyframes breathe{
+  0%,100%{fill:rgba(255,212,0,.30);stroke:#00316B}
+  50%{fill:rgba(38,166,130,.46);stroke:#0E6B55}}
+path.has:hover,path.has.hot{animation-play-state:paused;fill:rgba(255,212,0,.80);stroke:#00316B;stroke-width:5px;
+  filter:drop-shadow(0 4px 10px rgba(0,49,107,.35))}
+path.has:focus-visible{outline:none;stroke:#00316B;stroke-width:6px;fill:rgba(255,212,0,.80);animation-play-state:paused}
+path.has.tap{animation:tap .32s ease-out 1 !important}
+@keyframes tap{0%{fill:rgba(255,255,255,.85);stroke-width:8px}100%{fill:rgba(255,212,0,.80);stroke-width:5px}}
+/* Re-assessment pending: still, dashed, muted amber */
+path.has.pend{animation:none;fill:rgba(255,190,60,.20);stroke:#9A6A00;stroke-dasharray:10 7}
+path.has.pend:hover,path.has.pend.hot{fill:rgba(255,190,60,.45);stroke:#7A5200;stroke-width:4px;
+  filter:drop-shadow(0 3px 8px rgba(120,80,0,.3))}
 
 .tip{position:absolute;pointer-events:none;background:#132A42;color:#fff;padding:7px 11px;border-radius:8px;
   font-size:.85rem;line-height:1.3;white-space:nowrap;transform:translate(-50%,calc(-100% - 14px));opacity:0;transition:opacity .12s;z-index:3}
@@ -66,13 +78,31 @@ aside{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
 aside h2{font-size:1rem;margin:0 0 4px;font-weight:700}
 aside > p{margin:0 0 14px;color:var(--soft);font-size:.9rem}
 .list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
-.item{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
-  background:var(--raised);border:1px solid var(--rule);border-left:6px solid var(--harvest);border-radius:10px;padding:14px 16px}
-.item:hover,.item.hot{border-color:var(--field);border-left-color:var(--harvest);background:var(--harvest-soft)}
+.item{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
+  background:var(--raised);border:1px solid var(--rule);border-left:6px solid var(--harvest);border-radius:10px;padding:14px 16px;
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease}
+.item:hover,.item.hot{border-color:var(--field);border-left-color:var(--harvest);background:var(--harvest-soft);
+  transform:translateY(-2px);box-shadow:0 6px 18px rgba(19,42,66,.14)}
+.item:active{transform:translateY(0) scale(.985);box-shadow:0 1px 4px rgba(19,42,66,.12)}
+.list li{animation:rise .45s ease-out both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dot{display:inline-block;position:relative;width:9px;height:9px;border-radius:50%;background:#1F9C79;margin-right:8px;vertical-align:1px}
+.dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:#1F9C79;animation:ping 2.4s ease-out infinite}
+@keyframes ping{0%{transform:scale(1);opacity:.55}80%,100%{transform:scale(2.6);opacity:0}}
+.item.pend .dot{background:#C08A00}
+.item.pend .dot::after{display:none}
+.item .go{display:inline-flex;align-items:center;gap:5px;transition:transform .18s ease,background .18s ease}
+.item .go svg{transition:transform .18s ease}
+.item:hover .go{transform:translateX(2px)}
+.item:hover .go svg{transform:translateX(3px)}
+/* Ripple */
+.rip{position:absolute;border-radius:50%;pointer-events:none;background:currentColor;opacity:.18;transform:scale(0);
+  animation:rip .55s ease-out forwards}
+@keyframes rip{to{transform:scale(1);opacity:0}}
 .item:focus-visible{outline:3px solid var(--field);outline-offset:2px}
 .item .nm{font-weight:700;font-size:1.05rem}
 .item .meta{color:var(--soft);font-size:.85rem}
-.item .go{margin-left:auto;flex:none;background:var(--field);color:var(--field-ink);font-weight:600;font-size:.82rem;padding:7px 11px;border-radius:7px}
+.item .go{position:relative;overflow:hidden;margin-left:auto;flex:none;background:var(--field);color:var(--field-ink);font-weight:600;font-size:.82rem;padding:7px 11px;border-radius:7px}
 .note{margin-top:16px;font-size:.85rem;color:var(--soft);border-top:1px solid var(--rule);padding-top:14px}
 
 /* Viewer */
@@ -81,7 +111,12 @@ aside > p{margin:0 0 14px;color:var(--soft);font-size:.9rem}
 .bar{flex:none;display:flex;align-items:center;gap:14px;background:#00316B;color:#fff;
   padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px}
 .back{display:inline-flex;align-items:center;gap:6px;font:inherit;font-weight:600;font-size:.92rem;cursor:pointer;
-  background:#FFD400;color:#00316B;border:0;border-radius:8px;padding:8px 13px}
+  background:#FFD400;color:#00316B;border:0;border-radius:8px;padding:8px 13px;position:relative;overflow:hidden;
+  transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+.back:hover{background:#FFE14D;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.back:hover svg{transform:translateX(-3px)}
+.back svg{transition:transform .15s ease}
+.back:active{transform:scale(.96)}
 .back:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .bar .t{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .s{color:#B9CCE0;font-weight:500;font-size:.88rem;margin-left:6px}
@@ -100,7 +135,26 @@ aside > p{margin:0 0 14px;color:var(--soft);font-size:.9rem}
 .pcard h3{margin:0 0 4px;font-size:1.15rem}
 .pcard p{margin:0 0 6px;font-weight:600}
 .pcard small{display:block;color:var(--soft);margin-bottom:16px}
-.pcard button{font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:8px;padding:9px 22px;background:var(--field);color:var(--field-ink)}
+.pcard button{position:relative;overflow:hidden;font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:8px;padding:9px 22px;background:var(--field);color:var(--field-ink);
+  transition:transform .15s ease,box-shadow .15s ease}
+.pcard button:hover{box-shadow:0 4px 12px rgba(0,49,107,.35);transform:translateY(-1px)}
+.pcard button:active{transform:scale(.96)}
+.pmodal.open{animation:fade .2s ease-out}
+.pmodal.open .pcard{animation:pop .32s cubic-bezier(.2,1.3,.4,1)}
+.pmodal.open .ic{animation:wobble .6s ease-in-out .15s}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.85) translateY(10px)}}
+@keyframes wobble{25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+.viewer.open{animation:slide .3s cubic-bezier(.2,.8,.3,1)}
+@keyframes slide{from{opacity:0;transform:translateY(24px)}}
+.loading::before{content:"";width:28px;height:28px;margin-right:10px;border-radius:50%;border:3px solid var(--rule);border-top-color:var(--field);
+  animation:spin .8s linear infinite;display:inline-block;vertical-align:middle}
+.loading{display:flex;align-items:center;justify-content:center}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  path.has{fill:rgba(255,212,0,.40)}
+}
 .pcard button:focus-visible{outline:3px solid var(--harvest);outline-offset:2px}
 .item.pend .go{background:var(--harvest);color:#3A2A0E}
 
@@ -120,7 +174,8 @@ aside > p{margin:0 0 14px;color:var(--soft);font-size:.9rem}
       <p class="lede">Select a highlighted district on the map to open its school and student report cards.</p>
     </div>
     <div class="key" aria-hidden="true">
-      <span><i class="sw"></i>Report cards available</span>
+      <span><i class="sw live"></i>Baseline complete</span>
+      <span><i class="sw pend"></i>Re-assessment pending</span>
       <span><i class="sw off"></i>Not yet added</span>
     </div>
   </header>
@@ -280,11 +335,37 @@ ORDER.forEach(name => {
   const was = INFO[name].was ? ' · formerly ' + INFO[name].was : '';
   const pend = !!PENDING[name];
   li.innerHTML = `<button class="item${pend ? ' pend' : ''}" type="button" data-name="${name}">
-      <span><span class="nm">${name}</span><br><span class="meta">${pend ? 'Re-assessment pending' : INFO[name].blocks + ' blocks'}${was}</span></span>
-      <span class="go">${pend ? 'Pending' : 'Open'}</span></button>`;
+      <span><span class="nm"><i class="dot" aria-hidden="true"></i>${name}</span><br><span class="meta">${pend ? 'Re-assessment pending' : INFO[name].blocks + ' blocks'}${was}</span></span>
+      <span class="go">${pend ? 'Pending' : 'Open'}${pend ? '' : '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</span></button>`;
+  li.style.animationDelay = (ORDER.indexOf(name) * 45) + 'ms';
   list.appendChild(li);
 });
-list.addEventListener('click', e => { const b = e.target.closest('.item'); if (b) openReport(b.dataset.name); });
+list.addEventListener('click', e => { const b = e.target.closest('.item'); if (b) { tapMap(b.dataset.name); setTimeout(() => openReport(b.dataset.name), 200); } });
+
+// Visual feedback helpers
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function ripple(el, e){
+  if (reduceMotion) return;
+  const r = el.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2;
+  const x = (e.clientX || r.left + r.width/2) - r.left - d/2, y = (e.clientY || r.top + r.height/2) - r.top - d/2;
+  const s = document.createElement('span'); s.className = 'rip';
+  s.style.cssText = `width:${d}px;height:${d}px;left:${x}px;top:${y}px`;
+  el.appendChild(s); setTimeout(() => s.remove(), 600);
+}
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.item, .back, .pcard button'); if (el) ripple(el, e);
+});
+function tapMap(name){
+  document.querySelectorAll(`path.has[data-name="${name}"]`).forEach(p => {
+    p.classList.remove('tap'); void p.getBoundingClientRect(); p.classList.add('tap');
+    setTimeout(() => p.classList.remove('tap'), 360);
+  });
+}
+// Mark pending districts on the map and stagger the breathing so it ripples across the state
+document.querySelectorAll('path.has').forEach((p, i) => {
+  if (PENDING[p.dataset.name]) p.classList.add('pend');
+  p.style.animationDelay = (-(i * 0.45)) + 's';
+});
 
 function setHot(name, on){
   document.querySelectorAll(`[data-name="${name}"]`).forEach(el => el.classList.toggle('hot', on));
@@ -310,10 +391,13 @@ stage.addEventListener('pointermove', e => {
   if (p) showTip(p, e.clientX, e.clientY); else tip.classList.remove('show');
 });
 stage.addEventListener('pointerleave', () => tip.classList.remove('show'));
+stage.addEventListener('pointerover', e => {
+  const p = e.target.closest('path.has'); if (p && p.nextElementSibling) p.parentNode.appendChild(p);
+});
 stage.addEventListener('click', e => {
   const p = e.target.closest('path.d');
   if (!p) return;
-  if (REPORTS[p.dataset.name]) { tip.classList.remove('show'); openReport(p.dataset.name); }
+  if (REPORTS[p.dataset.name]) { tip.classList.remove('show'); const n = p.dataset.name; tapMap(n); setTimeout(() => openReport(n), 200); }
   else {
     showTip(p, e.clientX, e.clientY);
     clearTimeout(tipTimer); tipTimer = setTimeout(() => tip.classList.remove('show'), 1600);
