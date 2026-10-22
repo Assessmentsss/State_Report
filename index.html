@@ -291,6 +291,11 @@ details.fold .inner table thead th{position:sticky;top:0;background:var(--raised
 .dl > .btn::after{content:"";display:inline-block;width:6px;height:6px;margin-left:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-3px) rotate(45deg)}
 .dl-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:260px;background:var(--raised);border:1px solid var(--rule);border-radius:10px;padding:6px;box-shadow:0 12px 30px rgba(0,49,107,.18);display:grid;gap:2px}
 .dl-menu[hidden]{display:none}
+.dl-note{margin:2px 10px 6px;padding-bottom:7px;border-bottom:1px solid var(--rule);font-size:.78rem;color:var(--soft)}
+.dl-note b{color:var(--ink)}
+table.t tr.tot td{font-weight:700;border-top:2px solid var(--rule)}
+table.mx th.tt,table.mx td.tt{border-left:2px solid var(--rule)}
+@media (max-width:640px){#bTable .pbar{min-width:0;justify-content:flex-end}#bTable .pbar .trk{display:none}}
 .dl-menu button{font:inherit;text-align:left;cursor:pointer;background:transparent;color:var(--ink);border:0;border-radius:7px;padding:8px 10px;display:grid;gap:1px}
 .dl-menu button:hover,.dl-menu button:focus-visible{background:var(--harvest-soft);outline:none}
 .dl-menu b{font-size:.9rem}
@@ -559,7 +564,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
   </section>
 
   <section class="brm" id="panel-brm" role="tabpanel" aria-labelledby="tab-brm" hidden>
-    <p class="brm-intro">Track the monthly Block Review Meeting (BRM) in each of Odisha’s 314 blocks. A block counts as <b>complete</b> for a month once its BRM is conducted and the proceedings are updated on the NIPUN Odisha app.</p>
+    <p class="brm-intro">Track the monthly Block Review Meeting (BRM) in each of Odisha’s 314 blocks. A block counts as <b>complete</b> for a month once its BRM is conducted. Uploading proceedings on the NIPUN Odisha app is optional; until they are uploaded, the block shows <b>pending proceeding upload</b>. Choose <b>Total</b> in the Month list to add up every BRM from April to the current month.</p>
 
     <div class="brm-ctrl">
       <label>Month<select id="brmMonth"></select></label>
@@ -571,9 +576,10 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
         <div class="dl" id="dlWrap">
           <button class="btn" type="button" id="dlBtn" aria-haspopup="true" aria-expanded="false" aria-controls="dlMenu">Download</button>
           <div class="dl-menu" id="dlMenu" role="menu" hidden>
-            <button type="button" role="menuitem" id="brmXlsx"><b>Excel</b><span>Block status, district summary and monthly views</span></button>
-            <button type="button" role="menuitem" id="brmPdf"><b>PDF</b><span>Printable report for the selected month</span></button>
-            <button type="button" role="menuitem" id="brmExport"><b>CSV</b><span>Plain data, the format Upload CSV accepts</span></button>
+            <p class="dl-note" id="dlNote"></p>
+            <button type="button" role="menuitem" id="brmXlsx"><b>Excel</b><span>District summary, block status and month-by-month views</span></button>
+            <button type="button" role="menuitem" id="brmPdf"><b>PDF</b><span>Printable district report for the selected period</span></button>
+            <button type="button" role="menuitem" id="brmExport"><b>CSV</b><span>Block data for the district, the format Upload CSV accepts</span></button>
           </div>
         </div>
         <button class="btn solid" type="button" id="brmLogin">Admin sign-in</button>
@@ -590,6 +596,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
 
     <div class="stats" aria-live="polite">
       <div class="stat main"><span class="lbl" id="dsLbl"></span><span class="big" id="dsPct">0%</span><div class="meter"><i id="dsBar" style="width:0%"></i></div><span class="sub" id="dsSub"></span></div>
+      <div class="stat" id="ysStat"><span class="lbl" id="ysLbl"></span><span class="big" id="ysPct">0%</span><div class="meter"><i id="ysBar" style="width:0%"></i></div><span class="sub" id="ysSub"></span></div>
     </div>
 
 
@@ -597,7 +604,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
       <h2 id="bTitle">Block status</h2>
       <p class="lock" id="bLock"></p>
       <div class="scroll"><table class="t" id="bTable">
-        <thead><tr><th>Block</th><th>BRM conducted</th><th>Date of conduct</th><th>Proceedings updated on NIPUN Odisha app</th><th>Status</th></tr></thead>
+        <thead id="bHead"><tr><th>Block</th><th>BRM conducted</th><th>Date of conduct</th><th>Proceedings updated on NIPUN Odisha app</th><th>Status</th></tr></thead>
         <tbody></tbody>
       </table></div>
     </div>
@@ -605,13 +612,13 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
     <details class="fold" id="foldDist">
       <summary>District-wise BRM counts<small id="foldDistNote"></small></summary>
       <div class="inner scroll"><table class="t" id="dTable">
-        <thead><tr><th>District</th><th class="n">Blocks</th><th class="n">BRM conducted</th><th class="n">Proceedings on app</th><th>Completion</th></tr></thead>
+        <thead id="dHead"></thead>
         <tbody></tbody>
       </table></div>
     </details>
 
     <details class="fold" id="foldMonth">
-      <summary>Monthly completion by district<small>Each district out of 100%, April 2026 to March 2027</small></summary>
+      <summary>Monthly completion by district<small id="foldMonthNote">Each district out of 100%, April 2026 to March 2027</small></summary>
       <div class="inner scroll"><table class="t mx" id="mTable"><thead></thead><tbody></tbody></table></div>
     </details>
 
@@ -1204,6 +1211,18 @@ const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','D
 const mLabel = k => MN[+k.slice(5)-1] + ' ' + k.slice(0,4);
 const mLong = k => ['January','February','March','April','May','June','July','August','September','October','November','December'][+k.slice(5)-1] + ' ' + k.slice(0,4);
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// ---- Total to date: April to the current month (held within the April to March year)
+const t0 = new Date(), t0K = t0.getFullYear() + '-' + String(t0.getMonth()+1).padStart(2,'0');
+const CUR = t0K < MONTHS[0] ? MONTHS[0] : t0K > MONTHS[MONTHS.length-1] ? MONTHS[MONTHS.length-1] : t0K;
+const YTD = MONTHS.slice(0, MONTHS.indexOf(CUR) + 1);
+function rangeLong(ms){ const a = ms[0], b = ms[ms.length-1]; if (a === b) return mLong(a); return a.slice(0,4) === b.slice(0,4) ? mLong(a).split(' ')[0] + ' to ' + mLong(b) : mLong(a) + ' to ' + mLong(b); }
+function rangeShort(ms){ const a = ms[0], b = ms[ms.length-1]; return a === b ? mLabel(a) : MN[+a.slice(5)-1] + ' to ' + MN[+b.slice(5)-1]; }
+const YTD_LONG = rangeLong(YTD), YTD_SHORT = rangeShort(YTD);
+const isTot = v => v === 'ytd';
+const pMonths = v => isTot(v) ? YTD : [v];
+const pLong = v => isTot(v) ? YTD_LONG : mLong(v);
+// Months shown in district reports: April to the current month, or to the selected month if later
+const spanTo = v => MONTHS.slice(0, Math.max(MONTHS.indexOf(CUR), isTot(v) ? -1 : MONTHS.indexOf(v)) + 1);
 
 let store = {};
 try { store = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { store = {}; }
@@ -1211,11 +1230,22 @@ function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch
 function rec(month, d, b){ const k = d + '|' + b; if (SHEET) return (sheetData[month] && sheetData[month][k]) || {}; return (store[month] && store[month][k]) || (BRM_SEED[month] && BRM_SEED[month][k]) || {}; }
 function setRec(month, d, b, r){ store[month] = store[month] || {}; store[month][d + '|' + b] = r; save(); }
 function status(r){ if (r.c === 'Y' && r.p === 'Y') return 'done'; if (r.c === 'Y') return 'wait'; if (r.c === 'N') return 'no'; return 'none'; }
-const CHIP = { done:'Complete', wait:'Proceedings pending', no:'Not conducted', none:'Not reported' };
+const CHIP = { done:'Complete', wait:'Complete, pending proceeding upload', no:'Not conducted', none:'Not reported' };
 function tally(month, d){
   let c = 0, p = 0, any = 0;
   BRM_BLOCKS[d].forEach(b => { const r = rec(month, d, b); if (r.c) any++; if (r.c === 'Y') { c++; if (r.p === 'Y') p++; } });
   return { n: BRM_BLOCKS[d].length, c, p, any };
+}
+// Totals over a period: n is BRMs due (blocks x months), c BRMs conducted, p complete with proceedings on the app
+function tallyP(v, d){
+  const ms = pMonths(v); let n = 0, c = 0, p = 0, any = 0;
+  ms.forEach(k => { const t = tally(k, d); n += t.n; c += t.c; p += t.p; any += t.any; });
+  return { n, c, p, any, blocks: BRM_BLOCKS[d].length, months: ms.length };
+}
+function tallyB(v, d, b){
+  const ms = pMonths(v); let c = 0, p = 0, rep = 0;
+  ms.forEach(k => { const r = rec(k, d, b); if (r.c) rep++; if (r.c === 'Y') { c++; if (r.p === 'Y') p++; } });
+  return { n: ms.length, c, p, any: rep, none: ms.length - rep };
 }
 const pct = (a, n) => n ? Math.round(a / n * 1000) / 10 : 0;
 const fmtP = v => (Number.isInteger(v) ? v : v.toFixed(1)) + '%';
@@ -1226,7 +1256,13 @@ const yn = v => v === 'Y' ? 'Yes' : v === 'N' ? 'No' : '';
 
 const $ = id => document.getElementById(id);
 const selM = $('brmMonth'), selD = $('brmDist'), selB = $('brmBlock');
-MONTHS.forEach(k => selM.add(new Option(mLong(k), k)));
+(function(){
+  const g1 = document.createElement('optgroup'); g1.label = 'Total to date';
+  g1.appendChild(new Option('Total, ' + YTD_LONG, 'ytd'));
+  const g2 = document.createElement('optgroup'); g2.label = 'Single month';
+  MONTHS.forEach(k => g2.appendChild(new Option(mLong(k), k)));
+  selM.appendChild(g1); selM.appendChild(g2);
+})();
 DISTS.forEach(d => selD.add(new Option(d + ' (' + BRM_BLOCKS[d].length + ' blocks)', d)));
 function fillBlocks(d, keep){
   selB.innerHTML = '';
@@ -1255,7 +1291,7 @@ function writeSel(){
 window.__brmWriteSel = writeSel;
 const now = new Date(), nowK = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
 const s0 = readSel();
-selM.value = MONTHS.includes(s0.m) ? s0.m : (MONTHS.includes(nowK) ? nowK : MONTHS[MONTHS.length-1]);
+selM.value = (MONTHS.includes(s0.m) || isTot(s0.m)) ? s0.m : (MONTHS.includes(nowK) ? nowK : MONTHS[MONTHS.length-1]);
 selD.value = DISTS.includes(s0.d) ? s0.d : DISTS[0];
 fillBlocks(selD.value, s0.b);
 
@@ -1320,32 +1356,52 @@ $('lform').addEventListener('submit', async e => {
 
 // ---- Rendering
 function meter(id, v){ $(id).style.width = v + '%'; }
+function statText(v, d, t){
+  const tail = '; ' + t.p + ' with proceedings on the app, ' + (t.c - t.p) + ' pending proceeding upload';
+  if (!isTot(v)) return t.c + ' of ' + pl(t.n, 'block') + ' complete (BRM conducted)' + tail;
+  return t.c + ' of ' + t.n + ' BRMs conducted (' + pl(t.blocks, 'block') + ' \u00d7 ' + pl(t.months, 'month') + ')' + tail;
+}
 function renderStats(){
-  const m = selM.value, d = selD.value;
-  const t = tally(m, d), dv = pct(t.p, t.n);
-  $('dsLbl').textContent = d + ' district completion, ' + mLong(m);
+  const v = selM.value, d = selD.value;
+  const t = tallyP(v, d), dv = pct(t.c, t.n);
+  $('dsLbl').textContent = isTot(v) ? d + ' district total, ' + YTD_LONG : d + ' district completion, ' + mLong(v);
   $('dsPct').textContent = fmtP(dv); meter('dsBar', dv);
-  $('dsSub').textContent = t.p + ' of ' + pl(t.n, 'block') + ' complete; ' + pl(t.c, 'BRM') + ' conducted, ' + (t.c - t.p) + ' awaiting proceedings';
+  $('dsSub').textContent = statText(v, d, t);
+  // Second card: total to date, shown beside a single month
+  $('ysStat').hidden = isTot(v);
+  if (!isTot(v)) {
+    const y = tallyP('ytd', d), yv = pct(y.c, y.n);
+    $('ysLbl').textContent = d + ' total, ' + YTD_LONG;
+    $('ysPct').textContent = fmtP(yv); meter('ysBar', yv);
+    $('ysSub').textContent = statText('ytd', d, y);
+  }
+  $('dlNote').innerHTML = 'Downloads cover <b>' + esc(d) + '</b>, ' + esc(pLong(v)) + '.';
 }
 function renderDistricts(){
-  const m = selM.value, cur = selD.value;
-  $('dTable').tBodies[0].innerHTML = DISTS.map(d => {
-    const t = tally(m, d), v = pct(t.p, t.n);
-    return `<tr class="dist${cur === d ? ' sel' : ''}" data-d="${esc(d)}" tabindex="0"><td>${esc(d)}</td><td class="n">${t.n}</td><td class="n">${t.c}</td><td class="n">${t.p}</td>
-      <td><div class="pbar"><span class="trk"><i style="width:${v}%"></i></span><b>${fmtP(v)}</b></div></td></tr>`;
-  }).join('');
-  $('foldDistNote').textContent = mLong(m) + '. Select a row to open that district.';
+  const v = selM.value, cur = selD.value, tot = isTot(v);
+  $('dHead').innerHTML = '<tr><th>District</th><th class="n">Blocks</th>' + (tot ? '<th class="n">BRMs due</th><th class="n">BRMs conducted</th>' : '<th class="n">BRM conducted</th>') + '<th class="n">Proceedings on app</th><th>Completion</th></tr>';
+  let N = 0, B = 0, C = 0, P = 0;
+  const rows = DISTS.map(d => {
+    const t = tallyP(v, d), x = pct(t.c, t.n); N += t.n; B += t.blocks; C += t.c; P += t.p;
+    return `<tr class="dist${cur === d ? ' sel' : ''}" data-d="${esc(d)}" tabindex="0"><td>${esc(d)}</td><td class="n">${t.blocks}</td>${tot ? `<td class="n">${t.n}</td>` : ''}<td class="n">${t.c}</td><td class="n">${t.p}</td>
+      <td><div class="pbar"><span class="trk"><i style="width:${x}%"></i></span><b>${fmtP(x)}</b></div></td></tr>`;
+  });
+  const sx = pct(C, N);
+  rows.push(`<tr class="tot"><td>Odisha</td><td class="n">${B}</td>${tot ? `<td class="n">${N}</td>` : ''}<td class="n">${C}</td><td class="n">${P}</td><td><div class="pbar"><span class="trk"><i style="width:${sx}%"></i></span><b>${fmtP(sx)}</b></div></td></tr>`);
+  $('dTable').tBodies[0].innerHTML = rows.join('');
+  $('foldDistNote').textContent = (tot ? 'Total, ' + YTD_LONG : mLong(v)) + '. Select a row to open that district.';
 }
 function cell(t){
   if (!t.any) return '<td class="c na">–</td>';
-  const v = pct(t.p, t.n), a = (0.08 + v / 100 * 0.92).toFixed(2);
+  const v = pct(t.c, t.n), a = (0.08 + v / 100 * 0.92).toFixed(2);
   return `<td class="c" style="background:rgba(0,49,107,${a});color:${v >= 50 ? '#fff' : 'var(--ink)'}">${fmtP(v)}</td>`;
 }
 function renderMatrix(){
-  const m = selM.value;
-  $('mTable').tHead.innerHTML = '<tr><th>District</th>' + MONTHS.map(k => `<th class="m${k === m ? ' cur' : ''}">${mLabel(k)}</th>`).join('') + '</tr>';
-  const rows = DISTS.map(d => `<tr><td>${esc(d)}</td>${MONTHS.map(k => cell(tally(k, d))).join('')}</tr>`);
+  const v = selM.value, on = k => isTot(v) ? YTD.includes(k) : k === v;
+  $('mTable').tHead.innerHTML = '<tr><th>District</th>' + MONTHS.map(k => `<th class="m${on(k) ? ' cur' : ''}">${mLabel(k)}</th>`).join('') + `<th class="m tt">Total, ${YTD_SHORT}</th></tr>`;
+  const rows = DISTS.map(d => `<tr><td>${esc(d)}</td>${MONTHS.map(k => cell(tally(k, d))).join('')}${cell(tallyP('ytd', d)).replace('<td class="c', '<td class="c tt')}</tr>`);
   $('mTable').tBodies[0].innerHTML = rows.join('');
+  $('foldMonthNote').textContent = 'Each district out of 100%, April 2026 to March 2027, with the total to date';
 }
 function blockRow(m, d, b){
   const r = rec(m, d, b), s = status(r), id = esc(d + '|' + b);
@@ -1358,24 +1414,39 @@ function blockRow(m, d, b){
     <td data-label="Proceedings on NIPUN Odisha app"><select class="sm" data-f="p" aria-label="Proceedings updated for ${esc(b)}"${r.c!=='Y'?' disabled':''}><option value="">Select</option><option value="Y"${r.p==='Y'?' selected':''}>Yes</option><option value="N"${r.p==='N'?' selected':''}>No</option></select></td>
     <td><span class="chip ${s}">${CHIP[s]}</span></td></tr>`;
 }
+const B_HEAD = $('bHead').innerHTML;
 function renderBlocks(){
-  const m = selM.value, d = selD.value, b = selB.value;
+  const v = selM.value, d = selD.value, b = selB.value;
   const list = b ? [b] : BRM_BLOCKS[d];
-  $('bTable').tBodies[0].innerHTML = list.map(x => blockRow(m, d, x)).join('');
-  $('bTitle').textContent = (b ? b + ' block, ' + d : d + ' blocks') + ', ' + mLong(m);
+  if (isTot(v)) {
+    $('bHead').innerHTML = '<tr><th>Block</th><th class="n">BRMs conducted</th><th class="n">Proceedings on NIPUN Odisha app</th><th class="n">Months not reported</th><th>Completion</th></tr>';
+    const rows = list.map(x => {
+      const t = tallyB(v, d, x), xv = pct(t.c, t.n);
+      return `<tr><td>${esc(x)}</td><td class="n" data-label="BRMs conducted">${t.c} of ${t.n}</td><td class="n" data-label="Proceedings on NIPUN Odisha app">${t.p}</td><td class="n" data-label="Months not reported">${t.none}</td><td><div class="pbar"><span class="trk"><i style="width:${xv}%"></i></span><b>${fmtP(xv)}</b></div></td></tr>`;
+    });
+    if (!b) { const t = tallyP(v, d), xv = pct(t.c, t.n); rows.push(`<tr class="tot"><td>${esc(d)} total</td><td class="n" data-label="BRMs conducted">${t.c} of ${t.n}</td><td class="n" data-label="Proceedings on NIPUN Odisha app">${t.p}</td><td class="n" data-label="Months not reported">${t.n - t.any}</td><td><div class="pbar"><span class="trk"><i style="width:${xv}%"></i></span><b>${fmtP(xv)}</b></div></td></tr>`); }
+    $('bTable').tBodies[0].innerHTML = rows.join('');
+    $('bTitle').textContent = (b ? b + ' block, ' + d : d + ' blocks') + ', total ' + YTD_LONG;
+    $('bLock').textContent = 'Totals for ' + YTD_LONG + ' (' + pl(YTD.length, 'month') + '). Completion is BRMs conducted out of BRMs due; uploading proceedings is optional. Choose a single month to see or update each block\u2019s status.';
+    return;
+  }
+  $('bHead').innerHTML = B_HEAD; renderAdmin();
+  $('bTable').tBodies[0].innerHTML = list.map(x => blockRow(v, d, x)).join('');
+  $('bTitle').textContent = (b ? b + ' block, ' + d : d + ' blocks') + ', ' + mLong(v);
 }
-const SHORT = { done:'Complete', wait:'Pending', no:'Not held', none:'–' };
+const SHORT = { done:'Complete', wait:'Upload pending', no:'Not held', none:'–' };
 function renderBlockMatrix(){
-  const d = selD.value, m = selM.value, b = selB.value;
-  $('bmTable').tHead.innerHTML = '<tr><th>Block</th>' + MONTHS.map(k => `<th class="m${k === m ? ' cur' : ''}">${mLabel(k)}</th>`).join('') + '<th class="n">Months complete</th></tr>';
+  const d = selD.value, v = selM.value, b = selB.value, on = k => isTot(v) ? YTD.includes(k) : k === v;
+  $('bmTable').tHead.innerHTML = '<tr><th>Block</th>' + MONTHS.map(k => `<th class="m${on(k) ? ' cur' : ''}">${mLabel(k)}</th>`).join('') + `<th class="n tt">Complete, ${YTD_SHORT}</th><th class="n">Completion</th></tr>`;
   const rows = BRM_BLOCKS[d].map(x => {
-    let n = 0;
-    const cells = MONTHS.map(k => { const s = status(rec(k, d, x)); if (s === 'done') n++; return `<td class="s ${s}" title="${esc(x)}, ${mLong(k)}: ${CHIP[s]}">${SHORT[s]}</td>`; }).join('');
-    return `<tr${x === b ? ' class="sel"' : ''}><td>${esc(x)}</td>${cells}<td class="n">${n} of ${MONTHS.length}</td></tr>`;
+    const cells = MONTHS.map(k => { const s = status(rec(k, d, x)); return `<td class="s ${s}" title="${esc(x)}, ${mLong(k)}: ${CHIP[s]}">${SHORT[s]}</td>`; }).join('');
+    const t = tallyB('ytd', d, x);
+    return `<tr${x === b ? ' class="sel"' : ''}><td>${esc(x)}</td>${cells}<td class="n tt">${t.c} of ${t.n}</td><td class="n">${fmtP(pct(t.c, t.n))}</td></tr>`;
   });
-  rows.push(`<tr class="tot"><td>${esc(d)} completion</td>` + MONTHS.map(k => cell(tally(k, d))).join('') + '<td></td></tr>');
+  const y = tallyP('ytd', d);
+  rows.push(`<tr class="tot"><td>${esc(d)} completion</td>` + MONTHS.map(k => cell(tally(k, d))).join('') + `<td class="n tt">${y.c} of ${y.n}</td><td class="n">${fmtP(pct(y.c, y.n))}</td></tr>`);
   $('bmTable').tBodies[0].innerHTML = rows.join('');
-  $('foldBmNote').textContent = d + ', April 2026 to March 2027. Pending means the BRM is conducted but proceedings are not yet on the app.';
+  $('foldBmNote').textContent = d + ', April 2026 to March 2027. Upload pending means the BRM is conducted and counts as complete, but proceedings are not yet on the app.';
 }
 function renderAll(){ renderStats(); renderDistricts(); renderMatrix(); renderBlockMatrix(); renderBlocks(); writeSel(); }
 
@@ -1390,6 +1461,7 @@ $('dTable').addEventListener('click', e => {
 $('dTable').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr.dist')) { e.preventDefault(); e.target.click(); } });
 
 function askSignIn(e){
+  if (isTot(selM.value)) return;
   if (admin && !SHEET) return;
   if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
   const td = e.target.closest('td'); if (!td || td.cellIndex < 1 || td.cellIndex > 3) return;
@@ -1418,18 +1490,13 @@ function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add(
 const HDR = ['Month','District','Block','BRM conducted','Date of conduct','Proceedings updated on NIPUN Odisha app','Status'];
 const csvQ = v => /[",\n]/.test(v) ? '"' + String(v).replace(/"/g,'""') + '"' : v;
 $('brmExport').addEventListener('click', () => {
-  const lines = [HDR.join(',')];
-  MONTHS.forEach(m => DISTS.forEach(d => BRM_BLOCKS[d].forEach(b => {
+  const v = selM.value, d = selD.value, lines = [HDR.join(',')];
+  pMonths(v).forEach(m => BRM_BLOCKS[d].forEach(b => {
     const r = rec(m, d, b);
-    if (!r.c && !r.d && !r.p && m !== selM.value) return;
     lines.push([mLabel(m), d, b, yn(r.c), r.d || '', yn(r.p), CHIP[status(r)]].map(csvQ).join(','));
-  })));
-  const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'BRM_status_Odisha.csv';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast('CSV downloaded');
+  }));
+  saveBlob(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }), fileStem(v, d) + '.csv');
+  toast('CSV downloaded for ' + d);
 });
 function parseCSV(txt){
   const rows = []; let row = [], f = '', q = false;
@@ -1511,84 +1578,104 @@ function saveBlob(blob, name){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
-const fileStem = m => 'BRM_status_Odisha_' + mLong(m).replace(' ', '_');
-function stateTotals(m){
-  let n = 0, c = 0, p = 0, full = 0, rep = 0;
-  DISTS.forEach(d => { const t = tally(m, d); n += t.n; c += t.c; p += t.p; if (t.p === t.n) full++; if (t.any) rep++; });
-  return { n, c, p, full, rep };
-}
+const fileStem = (v, d) => 'BRM_' + d.replace(/[^A-Za-z0-9]+/g, '_') + '_' + (isTot(v) ? mLong(YTD[0]).split(' ')[0] + '_to_' + mLong(CUR).replace(' ', '_') : mLong(v).replace(' ', '_'));
 async function busy(btn, fn){
   if (btn.getAttribute('aria-busy') === 'true') return;
   btn.setAttribute('aria-busy', 'true');
   try { await fn(); } catch(err) { console.error(err); toast('The download could not be created. Try again.'); }
   finally { btn.removeAttribute('aria-busy'); }
 }
+const xDate = s => s ? new Date(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8)) : '';
 
 $('brmXlsx').addEventListener('click', e => busy(e.currentTarget, async () => {
   toast('Preparing Excel file…');
   await loadLib('lib-xlsx');
-  const m = selM.value, X = window.XLSX, wb = X.utils.book_new();
-  // Sheet 1: every block for the month
-  const rows = [['Month','District','Block','BRM conducted','Date of conduct','Proceedings updated on NIPUN Odisha app','Status']];
-  DISTS.forEach(d => BRM_BLOCKS[d].forEach(b => {
-    const r = rec(m, d, b);
-    rows.push([mLong(m), d, b, yn(r.c), r.d ? new Date(+r.d.slice(0,4), +r.d.slice(5,7)-1, +r.d.slice(8)) : '', yn(r.p), CHIP[status(r)]]);
-  }));
-  const s1 = X.utils.aoa_to_sheet(rows, { cellDates: true });
-  for (let i = 2; i <= rows.length; i++) { const c = s1['E' + i]; if (c && c.t === 'd') c.z = 'd mmm yyyy'; }
-  s1['!cols'] = [14,18,22,15,16,38,20].map(w => ({ wch: w }));
-  s1['!autofilter'] = { ref: 'A1:G' + rows.length };
-  // Sheet 2: district summary
-  const sum = [['District','Blocks','BRM conducted','Proceedings on app (blocks complete)','Completion']];
-  DISTS.forEach(d => { const t = tally(m, d); sum.push([d, t.n, t.c, t.p, t.n ? t.p / t.n : 0]); });
-  const st = stateTotals(m);
-  sum.push(['Odisha', st.n, st.c, st.p, st.n ? st.p / st.n : 0]);
-  const s2 = X.utils.aoa_to_sheet(sum);
-  for (let i = 2; i <= sum.length; i++) s2['E' + i].z = '0.0%';
-  s2['!cols'] = [18,10,15,34,12].map(w => ({ wch: w }));
-  // Sheet 3: monthly completion by district
-  const mx = [['District', ...MONTHS.map(mLabel)]];
-  DISTS.forEach(d => mx.push([d, ...MONTHS.map(k => { const t = tally(k, d); return t.any ? t.p / t.n : ''; })]));
-  const s3 = X.utils.aoa_to_sheet(mx);
-  Object.keys(s3).forEach(k => { if (k[0] !== '!' && typeof s3[k].v === 'number') s3[k].z = '0.0%'; });
-  s3['!cols'] = [{ wch: 18 }, ...MONTHS.map(() => ({ wch: 10 }))];
-  X.utils.book_append_sheet(wb, s1, 'Block status');
-  X.utils.book_append_sheet(wb, s2, 'District summary');
-  X.utils.book_append_sheet(wb, s3, 'Monthly completion');
-  // Sheet 4: monthly status of every block
-  const bm = [['District','Block', ...MONTHS.map(mLabel), 'Months complete']];
-  DISTS.forEach(d => BRM_BLOCKS[d].forEach(b => {
-    const st = MONTHS.map(k => status(rec(k, d, b)));
-    bm.push([d, b, ...st.map(s => CHIP[s]), st.filter(s => s === 'done').length]);
-  }));
+  const v = selM.value, d = selD.value, X = window.XLSX, wb = X.utils.book_new();
+  const t = tallyP(v, d), span = spanTo(v), today = new Date();
+  const pctCells = (sh, col, from, to) => { for (let i = from; i <= to; i++) { const c = sh[col + i]; if (c && typeof c.v === 'number') c.z = '0.0%'; } };
+  // Sheet 1: district summary for the selected period
+  const sum = [
+    ['BRM status', d + ' district'],
+    ['Period', pLong(v)],
+    ['Blocks', t.blocks],
+    ['Months', t.months],
+    ['BRMs due', t.n],
+    ['BRMs conducted', t.c],
+    ['Proceedings updated on NIPUN Odisha app', t.p],
+    ['Pending proceeding upload', t.c - t.p],
+    ['Completion', t.n ? t.c / t.n : 0],
+    ['Downloaded', today.getDate() + ' ' + MN[today.getMonth()] + ' ' + today.getFullYear()],
+    [],
+    ['A block is complete for a month once its BRM is conducted. Uploading proceedings on the NIPUN Odisha app is optional; blocks without them show pending proceeding upload. Completion is BRMs conducted out of BRMs due (blocks multiplied by months).']
+  ];
+  const s1 = X.utils.aoa_to_sheet(sum);
+  s1['B9'].z = '0.0%';
+  s1['!cols'] = [{ wch: 48 }, { wch: 28 }];
+  X.utils.book_append_sheet(wb, s1, 'District summary');
+  // Sheet 2: block status for the period
+  let rows, s2;
+  if (isTot(v)) {
+    rows = [['District','Block','BRMs due','BRMs conducted','Proceedings on NIPUN Odisha app','Pending proceeding upload','Months not reported','Completion']];
+    BRM_BLOCKS[d].forEach(b => { const x = tallyB(v, d, b); rows.push([d, b, x.n, x.c, x.p, x.c - x.p, x.none, x.n ? x.c / x.n : 0]); });
+    rows.push([d + ' total', '', t.n, t.c, t.p, t.c - t.p, t.n - t.any, t.n ? t.c / t.n : 0]);
+    s2 = X.utils.aoa_to_sheet(rows);
+    pctCells(s2, 'H', 2, rows.length);
+    s2['!cols'] = [18,22,10,15,30,20,19,12].map(w => ({ wch: w }));
+  } else {
+    rows = [['Month','District','Block','BRM conducted','Date of conduct','Proceedings updated on NIPUN Odisha app','Status']];
+    BRM_BLOCKS[d].forEach(b => { const r = rec(v, d, b); rows.push([mLong(v), d, b, yn(r.c), xDate(r.d), yn(r.p), CHIP[status(r)]]); });
+    s2 = X.utils.aoa_to_sheet(rows, { cellDates: true });
+    for (let i = 2; i <= rows.length; i++) { const c = s2['E' + i]; if (c && c.t === 'd') c.z = 'd mmm yyyy'; }
+    s2['!cols'] = [16,18,22,15,16,38,20].map(w => ({ wch: w }));
+  }
+  s2['!autofilter'] = { ref: 'A1:' + X.utils.encode_col(rows[0].length - 1) + rows.length };
+  X.utils.book_append_sheet(wb, s2, 'Block status');
+  // Sheet 3: month by month for the district, with the total
+  const mm = [['Month','Blocks','BRM conducted','Proceedings on app','Pending proceeding upload','Completion']];
+  span.forEach(k => { const x = tally(k, d); mm.push([mLong(k), x.n, x.c, x.p, x.c - x.p, x.any ? x.c / x.n : 'Not reported']); });
+  const sp = span.reduce((a, k) => { const x = tally(k, d); a.n += x.n; a.c += x.c; a.p += x.p; return a; }, { n: 0, c: 0, p: 0 });
+  mm.push(['Total, ' + rangeLong(span), sp.n, sp.c, sp.p, sp.c - sp.p, sp.n ? sp.c / sp.n : 0]);
+  const s3 = X.utils.aoa_to_sheet(mm);
+  pctCells(s3, 'F', 2, mm.length);
+  s3['!cols'] = [30,10,15,28,20,13].map(w => ({ wch: w }));
+  X.utils.book_append_sheet(wb, s3, 'Monthly summary');
+  // Sheet 4: every block, month by month
+  const bm = [['Block', ...span.map(mLabel), 'Months complete', 'Completion']];
+  BRM_BLOCKS[d].forEach(b => {
+    const st = span.map(k => status(rec(k, d, b))), done = st.filter(s => s === 'done' || s === 'wait').length;
+    bm.push([b, ...st.map(s => CHIP[s]), done, span.length ? done / span.length : 0]);
+  });
   const s4 = X.utils.aoa_to_sheet(bm);
-  s4['!cols'] = [{ wch: 18 }, { wch: 22 }, ...MONTHS.map(() => ({ wch: 19 })), { wch: 15 }];
-  s4['!autofilter'] = { ref: 'A1:' + X.utils.encode_col(MONTHS.length + 2) + bm.length };
+  pctCells(s4, X.utils.encode_col(span.length + 2), 2, bm.length);
+  s4['!cols'] = [{ wch: 22 }, ...span.map(() => ({ wch: 19 })), { wch: 16 }, { wch: 12 }];
+  s4['!autofilter'] = { ref: 'A1:' + X.utils.encode_col(span.length + 2) + bm.length };
   X.utils.book_append_sheet(wb, s4, 'Block-wise monthly');
   const out = X.write(wb, { bookType: 'xlsx', type: 'array', cellDates: true });
-  saveBlob(new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileStem(m) + '.xlsx');
-  toast('Excel file downloaded');
+  saveBlob(new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileStem(v, d) + '.xlsx');
+  toast('Excel file downloaded for ' + d);
 }));
 
 $('brmPdf').addEventListener('click', e => busy(e.currentTarget, async () => {
   toast('Preparing PDF…');
   await loadLib('lib-jspdf'); await loadLib('lib-autotable');
-  const m = selM.value, { jsPDF } = window.jspdf;
+  const v = selM.value, d = selD.value, { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   doc.addFileToVFS('PublicSans-Regular.ttf', $('font-ps-r').textContent.trim()); doc.addFont('PublicSans-Regular.ttf', 'PublicSans', 'normal');
   doc.addFileToVFS('PublicSans-Bold.ttf', $('font-ps-b').textContent.trim()); doc.addFont('PublicSans-Bold.ttf', 'PublicSans', 'bold');
-  const BLUE = [0,49,107], YEL = [255,212,0], INK = [19,42,66], SOFT = [92,118,144], RULE = [207,225,242], TINT = [234,242,251];
-  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 40;
-  const st = stateTotals(m), today = new Date();
+  const BLUE = [0,49,107], YEL = [255,212,0], INK = [19,42,66], SOFT = [92,118,144], RULE = [207,225,242], TINT = [234,242,251], ORANGE = [197,95,52];
+  const W = doc.internal.pageSize.getWidth(), M = 40;
+  const t = tallyP(v, d), span = spanTo(v), today = new Date(), tot = isTot(v);
   // Header band
   doc.setFillColor(...BLUE); doc.rect(0, 0, W, 86, 'F');
   doc.setFillColor(...YEL); doc.rect(0, 86, W, 5, 'F');
   doc.setFont('PublicSans', 'bold'); doc.setTextColor(255,255,255); doc.setFontSize(18);
-  doc.text('Block Review Meeting status, Odisha', M, 42);
+  doc.text('Block Review Meeting status, ' + d + ' district', M, 42);
   doc.setFont('PublicSans', 'normal'); doc.setFontSize(11); doc.setTextColor(201,216,234);
-  doc.text(mLong(m) + '  |  Downloaded ' + today.getDate() + ' ' + MN[today.getMonth()] + ' ' + today.getFullYear(), M, 64);
+  doc.text((tot ? 'Total, ' : '') + pLong(v) + '  |  Downloaded ' + today.getDate() + ' ' + MN[today.getMonth()] + ' ' + today.getFullYear(), M, 64);
   // Key figures
-  const figs = [[fmtP(pct(st.p, st.n)), 'of blocks complete'], [st.p + ' of ' + st.n, 'blocks complete'], [st.full + ' of ' + DISTS.length, 'districts at 100%'], [st.rep + ' of ' + DISTS.length, 'districts reporting']];
+  const figs = tot
+    ? [[fmtP(pct(t.c, t.n)), 'completion'], [t.c + ' of ' + t.n, 'BRMs conducted'], [t.p + ' of ' + t.c, 'proceedings uploaded'], [String(t.c - t.p), 'pending proceeding upload']]
+    : [[fmtP(pct(t.c, t.n)), 'completion'], [t.c + ' of ' + t.n, 'blocks complete'], [t.p + ' of ' + t.c, 'proceedings uploaded'], [String(t.c - t.p), 'pending proceeding upload']];
   const fw = (W - 2 * M - 3 * 10) / 4;
   figs.forEach((f, i) => {
     const x = M + i * (fw + 10), y = 110;
@@ -1597,48 +1684,88 @@ $('brmPdf').addEventListener('click', e => busy(e.currentTarget, async () => {
     doc.setFont('PublicSans', 'normal'); doc.setFontSize(9); doc.setTextColor(...SOFT); doc.text(f[1], x + 12, y + 43);
   });
   doc.setFont('PublicSans', 'normal'); doc.setFontSize(9); doc.setTextColor(...SOFT);
-  doc.text('A block is complete once its BRM is conducted and the proceedings are updated on the NIPUN Odisha app.', M, 186);
+  doc.text('A block is complete for a month once its BRM is conducted. Uploading proceedings on the NIPUN Odisha app is optional.', M, 186);
+  if (tot) doc.text('BRMs due = ' + t.blocks + ' blocks \u00d7 ' + t.months + ' months. Completion is BRMs conducted out of BRMs due.', M, 199);
   const base = {
     styles: { font: 'PublicSans', fontSize: 8.5, textColor: INK, lineColor: RULE, lineWidth: 0.5, cellPadding: 4 },
     headStyles: { font: 'PublicSans', fontStyle: 'bold', fillColor: BLUE, textColor: [255,255,255], lineWidth: 0 },
+    footStyles: { font: 'PublicSans', fontStyle: 'bold', fillColor: [255,245,194], textColor: BLUE, lineWidth: 0 },
     alternateRowStyles: { fillColor: [247,250,253] },
     margin: { left: M, right: M, top: 50, bottom: 40 }
   };
-  // District summary
-  doc.setFont('PublicSans', 'bold'); doc.setFontSize(12); doc.setTextColor(...BLUE); doc.text('District summary', M, 212);
-  const dBody = DISTS.map(d => { const t = tally(m, d); return [d, t.n, t.c, t.p, t.any ? fmtP(pct(t.p, t.n)) : 'Not reported']; });
+  const right = from => c => { if (c.column.index >= from) c.cell.styles.halign = 'right'; if (c.section === 'body' && c.cell.raw === 'Not reported') c.cell.styles.textColor = SOFT; };
+  // Month-by-month summary
+  doc.setFont('PublicSans', 'bold'); doc.setFontSize(12); doc.setTextColor(...BLUE);
+  doc.text('Month by month, ' + rangeLong(span), M, 226);
+  let sn = 0, sc = 0, sp = 0;
+  const mBody = span.map(k => { const x = tally(k, d); sn += x.n; sc += x.c; sp += x.p; return [mLong(k), x.n, x.c, x.p, x.c - x.p, x.any ? fmtP(pct(x.c, x.n)) : 'Not reported']; });
   doc.autoTable(Object.assign({}, base, {
-    startY: 220,
-    head: [['District','Blocks','BRM conducted','Proceedings on app','Completion']],
-    body: dBody,
-    foot: [['Odisha', st.n, st.c, st.p, fmtP(pct(st.p, st.n))]],
-    footStyles: { font: 'PublicSans', fontStyle: 'bold', fillColor: [255,245,194], textColor: BLUE, lineWidth: 0 },
-    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
-    didParseCell: c => { if (c.section === 'head' && c.column.index > 0) c.cell.styles.halign = 'right'; if (c.section === 'foot' && c.column.index > 0) c.cell.styles.halign = 'right'; if (c.section === 'body' && c.cell.raw === 'Not reported') c.cell.styles.textColor = SOFT; }
+    startY: 234,
+    head: [['Month','Blocks','BRM conducted','Proceedings on app','Pending proceeding upload','Completion']],
+    body: mBody,
+    foot: [['Total', sn, sc, sp, sc - sp, fmtP(pct(sc, sn))]],
+    didParseCell: right(1)
   }));
-  // Block status, a new page
+  // Block status for the period
   doc.addPage();
-  doc.setFont('PublicSans', 'bold'); doc.setFontSize(12); doc.setTextColor(...BLUE); doc.text('Block status, ' + mLong(m), M, 46);
-  const SCOL = { 'Complete': BLUE, 'Proceedings pending': [143,111,0], 'Not conducted': [197,95,52], 'Not reported': SOFT };
-  const bBody = [];
-  DISTS.forEach(d => BRM_BLOCKS[d].forEach(b => { const r = rec(m, d, b); bBody.push([d, b, yn(r.c) || '–', fmtDate(r.d), yn(r.p) || '–', CHIP[status(r)]]); }));
+  doc.setFont('PublicSans', 'bold'); doc.setFontSize(12); doc.setTextColor(...BLUE);
+  doc.text('Block status, ' + (tot ? 'total ' : '') + pLong(v), M, 46);
+  if (tot) {
+    const bBody = BRM_BLOCKS[d].map(b => { const x = tallyB(v, d, b); return [b, x.n, x.c, x.p, x.none, fmtP(pct(x.c, x.n))]; });
+    doc.autoTable(Object.assign({}, base, {
+      startY: 56,
+      head: [['Block','BRMs due','BRMs conducted','Proceedings on app','Months not reported','Completion']],
+      body: bBody,
+      foot: [[d + ' total', t.n, t.c, t.p, t.n - t.any, fmtP(pct(t.c, t.n))]],
+      didParseCell: right(1)
+    }));
+  } else {
+    const SCOL = { 'Complete': BLUE, 'Complete, pending proceeding upload': [143,111,0], 'Not conducted': ORANGE, 'Not reported': SOFT };
+    const bBody = BRM_BLOCKS[d].map(b => { const r = rec(v, d, b); return [b, yn(r.c) || '–', fmtDate(r.d), yn(r.p) || '–', CHIP[status(r)]]; });
+    doc.autoTable(Object.assign({}, base, {
+      startY: 56,
+      head: [['Block','BRM conducted','Date of conduct','Proceedings on app','Status']],
+      body: bBody,
+      didParseCell: c => { if (c.section === 'body' && c.column.index === 4) { c.cell.styles.textColor = SCOL[c.cell.raw] || INK; c.cell.styles.fontStyle = 'bold'; } }
+    }));
+  }
+  // Every block, month by month (landscape page)
+  doc.addPage('a4', 'landscape');
+  doc.setFont('PublicSans', 'bold'); doc.setFontSize(12); doc.setTextColor(...BLUE);
+  doc.text('Block-wise monthly status, ' + rangeLong(span), M, 46);
+  const cross = span[0].slice(0,4) !== span[span.length-1].slice(0,4);
+  const mBody2 = BRM_BLOCKS[d].map(b => { const st = span.map(k => status(rec(k, d, b))), n = st.filter(s => s === 'done' || s === 'wait').length; return [b, ...st.map(s => SHORT[s]), n + ' of ' + span.length]; });
+  const KIND = { 'Complete': 'done', 'Upload pending': 'wait', 'Not held': 'no' };
   doc.autoTable(Object.assign({}, base, {
     startY: 56,
-    head: [['District','Block','BRM conducted','Date of conduct','Proceedings on app','Status']],
-    body: bBody,
-    didParseCell: c => { if (c.section === 'body' && c.column.index === 5) { c.cell.styles.textColor = SCOL[c.cell.raw] || INK; c.cell.styles.fontStyle = 'bold'; } }
+    styles: Object.assign({}, base.styles, { fontSize: 7.5, cellPadding: 3, halign: 'center' }),
+    head: [['Block', ...span.map(k => cross ? mLabel(k) : MN[+k.slice(5)-1]), 'Complete']],
+    body: mBody2,
+    columnStyles: { 0: { halign: 'left' } },
+    didParseCell: c => {
+      if (c.section === 'head' && c.column.index === 0) c.cell.styles.halign = 'left';
+      if (c.section !== 'body' || c.column.index === 0 || c.column.index > span.length) return;
+      const k = KIND[c.cell.raw];
+      if (k === 'done') { c.cell.styles.fillColor = BLUE; c.cell.styles.textColor = [255,255,255]; c.cell.styles.fontStyle = 'bold'; }
+      else if (k === 'wait') { c.cell.styles.fillColor = YEL; c.cell.styles.textColor = BLUE; c.cell.styles.fontStyle = 'bold'; }
+      else if (k === 'no') { c.cell.styles.textColor = ORANGE; c.cell.styles.fontStyle = 'bold'; }
+      else c.cell.styles.textColor = SOFT;
+    }
   }));
+  doc.setFont('PublicSans', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...SOFT);
+  doc.text('Upload pending means the BRM is conducted and counts as complete, but the proceedings are not yet on the NIPUN Odisha app.', M, doc.lastAutoTable.finalY + 16);
   // Footer on every page
   const n = doc.getNumberOfPages();
   for (let i = 1; i <= n; i++) {
     doc.setPage(i);
-    doc.setDrawColor(...RULE); doc.setLineWidth(0.5); doc.line(M, H - 28, W - M, H - 28);
+    const PW = doc.internal.pageSize.getWidth(), PH = doc.internal.pageSize.getHeight();
+    doc.setDrawColor(...RULE); doc.setLineWidth(0.5); doc.line(M, PH - 28, PW - M, PH - 28);
     doc.setFont('PublicSans', 'normal'); doc.setFontSize(8); doc.setTextColor(...SOFT);
-    doc.text('Odisha BRM tracker, ' + mLong(m), M, H - 16);
-    doc.text('Page ' + i + ' of ' + n, W - M, H - 16, { align: 'right' });
+    doc.text('Odisha BRM tracker, ' + d + ', ' + (tot ? 'total ' : '') + pLong(v), M, PH - 16);
+    doc.text('Page ' + i + ' of ' + n, PW - M, PH - 16, { align: 'right' });
   }
-  saveBlob(doc.output('blob'), fileStem(m) + '.pdf');
-  toast('PDF downloaded');
+  saveBlob(doc.output('blob'), fileStem(v, d) + '.pdf');
+  toast('PDF downloaded for ' + d);
 }));
 
 // ---- Google Sheet sync
