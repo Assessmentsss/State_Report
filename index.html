@@ -238,6 +238,13 @@ table.mx tr.tot td{font-weight:800}
 .chip.none{background:transparent;color:var(--soft);border:1.5px dashed var(--rule)}
 .err{color:#C55F34;font-size:.78rem;display:block;margin-top:2px}
 .foot{font-size:.82rem;color:var(--soft);margin:0}
+.sync{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;font-size:.86rem;color:var(--soft);
+  background:var(--raised);border:1px solid var(--rule);border-radius:10px;padding:8px 12px}
+.sync .dot{width:9px;height:9px;border-radius:50%;background:var(--field);flex:none}
+.sync.err .dot{background:#C55F34}
+.sync.busy .dot{background:var(--harvest)}
+.sync #syncTxt{flex:1 1 220px}
+.sync .btn{padding:6px 12px;font-size:.84rem;text-decoration:none}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#00316B;color:#fff;
   padding:10px 16px;border-radius:9px;font-size:.9rem;font-weight:600;z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
@@ -403,6 +410,13 @@ table.t td.vo:focus-visible{outline:3px solid var(--harvest);outline-offset:-3px
       <input type="file" id="brmFile" accept=".csv,text/csv" hidden>
     </div>
 
+    <div class="sync" id="brmSync" role="status" hidden>
+      <i class="dot" aria-hidden="true"></i>
+      <span id="syncTxt">Loading from Google Sheet…</span>
+      <button class="btn" type="button" id="syncRefresh">Refresh</button>
+      <a class="btn solid" id="syncOpen" target="_blank" rel="noopener" hidden>Edit in Google Sheet</a>
+    </div>
+
     <div class="stats" aria-live="polite">
       <div class="stat main"><span class="lbl" id="dsLbl"></span><span class="big" id="dsPct">0%</span><div class="meter"><i id="dsBar" style="width:0%"></i></div><span class="sub" id="dsSub"></span></div>
     </div>
@@ -426,7 +440,7 @@ table.t td.vo:focus-visible{outline:3px solid var(--harvest);outline-offset:-3px
     </details>
 
     <details class="fold" id="foldMonth">
-      <summary>Monthly completion by district<small>Each district out of 100%, April 2026 to March 2027</small></summary>
+      <summary>Monthly completion by district<small>Each district out of 100%, October 2026 to March 2027</small></summary>
       <div class="inner scroll"><table class="t mx" id="mTable"><thead></thead><tbody></tbody></table></div>
     </details>
     <p class="foot">Block list: 30 districts, 314 blocks. District and block names follow the spellings used in the baseline report cards.</p>
@@ -639,12 +653,28 @@ if (start) openReport(start, false);
 const BRM_BLOCKS = {"Anugola": ["Anugola", "Athmallik", "Banarpal", "Chhendipada", "Kaniha", "Kishorenagar", "Palalahada", "Talacher"], "Balangir": ["Agalpur", "Bangomunda", "Belpada", "Balangir", "Deogaon", "Gudvela", "Khaprakhol", "Loisingha", "Muribahal", "Patnagarh", "Puintala", "Saintala", "Titlagarh", "Tureikela"], "Baleshwar": ["Bahanaga", "Baleshwar Sadar", "Baliapal", "Basta", "Bhograi", "Jaleswar", "Khaira", "Nilagiri", "Oupada", "Remuna", "Simulia", "Soro"], "Baragada": ["Ambabhona", "Attabira", "Baragada", "Barpali", "Bhatli", "Bheden", "Bijepur", "Gaisilet", "Jharbandh", "Paikmal", "Padampur", "Sohella"], "Bhadrak": ["Banta", "Basudevpur", "Bhadrak", "Bhandaripokhari", "Chandabali", "Dhamanagar", "Tihidi"], "Boudh": ["Boudh", "Harabhanga", "Kantamal"], "Debagada": ["Barkote", "Reamal", "Tileibani"], "Dhenkanal": ["Bhuban", "Dhenkanal Sadar", "Gondia", "Hindol", "Kamakhyanagar", "Kankada Had", "Odapada", "Parjang"], "Gajapati": ["Gosani", "Gumma", "Kasinagar", "Mohana", "Nuagada", "R. Udayagiri", "Rayagada"], "Ganjam": ["Asika", "Beguniapada", "Bellaguntha", "Bhanjanagar", "Buguda", "Chatrapur", "Chikiti", "Dharakote", "Digapahandi", "Ganjam", "Hinjilikatu", "Jagannathprasad", "Kabisuryanagar", "Khallikote", "Kukudakhandi", "Patrapur", "Polosara", "Purushottampur", "Rangeilunda", "Sanakhemundi", "Sheragada", "Sorada"], "Jagatsinghapur": ["Balikuda", "Biridi", "Erasama", "Jagatsinghapur", "Kujang", "Naugaon", "Raghunathpur", "Tirtol"], "Jajapur": ["Badachana", "Bari", "Binjharpur", "Dangadi", "Dasarathpur", "Dharmasala", "Jajapur", "Korai", "Rasulpur", "Sukinda"], "Jharsuguda": ["Jharsuguda", "Kirmira", "Kolabira", "Laikera", "Lakhanpur"], "Kalahandi": ["Bhawanipatna", "Dharmagarh", "Golamunda", "Jaipatna", "Junagarh", "Kalampur", "Karlamunda", "Kesinga", "Koksara", "Lanjigarh", "M. Rampur", "Narla", "Thuamul Rampur"], "Kandhamala": ["Baliguda", "Chakapad", "Daringibadi", "G. Udayagiri", "K. Nuagan", "Khajuripada", "Kotagarh", "Phiringia", "Phulbani", "Raikia", "Tikabali", "Tumudibandh"], "Kataka": ["Athagarh", "Badamba", "Banki", "Banki-Dampara", "Baranga", "Kataka Sadar", "Kantapada", "Mahanga", "Narasinghpur", "Niali", "Nischintakoili", "Salepur", "Tangi-Choudwar", "Tigiria"], "Kendrapada": ["Aul", "Derabish", "Garadpur", "Kendrapada", "Mahakalapada", "Marshaghai", "Pattamundai", "Rajkanika", "Rajnagar"], "Kendujhar": ["Anandapur", "Banspal", "Champua", "Ghasipura", "Ghatagaon", "Harichandanpur", "Hatadihi", "Jhumpura", "Joda", "Kendujhar Sadar", "Patana", "Saharpada", "Telkoi"], "Khordha": ["Balianta", "Balipatna", "Banapur", "Begunia", "Bhubaneswar", "Bolagarh", "Chilika", "Jatani", "Khordha", "Tangi"], "Koraput": ["Bandhugam", "Boipariguda", "Borigumma", "Dasmantpur", "Jeypore", "Koraput", "Kotpad", "Kundra", "Lamtaput", "Laxmipur", "Nandapur", "Narayanapatna", "Pottangi", "Semiliguda"], "Malkangiri": ["Kalimela", "Khairaput", "Korukonda", "Kudumulugumma", "Malkangiri", "Mathili", "Podia"], "Mayurbhanj": ["Badasahi", "Bahalda", "Bangriposi", "Baripada", "Betanati", "Bijatala", "Bisoi", "Gopabandhunagar", "Jamda", "Joshipur", "Kaptipada", "Karanjia", "Khunta", "Kuliana", "Kusumi", "Morada", "Rairangpur", "Raruan", "Rasagobindapur", "Saraskana", "Shamakhunta", "Sukruli", "Suliapada", "Thakurmunda", "Tiring", "Udala"], "Nabarangpur": ["Chandahandi", "Dabugam", "Jharigam", "Kosagumuda", "Nabarangpur", "Nandahandi", "Papadahandi", "Raighar", "Tentulikhunti", "Umerkote"], "Nayagada": ["Bhapur", "Daspalla", "Gania", "Khandapada", "Nayagada", "Nuagaon", "Odagaon", "Ranapur"], "Nuapada": ["Boden", "Khadial", "Komna", "Nuapada", "Sinapali"], "Puri": ["Astaranga", "Brahmagiri", "Delanga", "Gop", "Kakatpur", "Kanas", "Krushnaprasad", "Nimapada", "Pipili", "Puri Sadar", "Satyabadi"], "Rayagada": ["Bissam Cuttack", "Chandrapur", "Gudari", "Gunupur", "Kalyansinghpur", "Kashipur", "Kolnara", "Muniguda", "Padmapur", "Ramanaguda", "Rayagada"], "Sambalpur": ["Bamra", "Dhankauda", "Jamankira", "Jujomura", "Kuchinda", "Maneswar", "Naktideul", "Rairakhol", "Rengali"], "Subarnapur": ["Binika", "Birmaharajpur", "Dunguripali", "Subarnapur", "Tarbha", "Ulunda"], "Sundaragada": ["Badagan", "Balisankara", "Banaigada", "Bisra", "Gurundia", "Hemgir", "Koida", "Kuarmunda", "Kutra", "Lahunipada", "Lathikata", "Lephripada", "Nuagaon", "Rajgangpur", "Sabdega", "Sundaragada", "Tangarpali"]};
 // Status already confirmed by the state team can be embedded here: {"2026-10": {"Ganjam|Asika": {c:"Y", d:"2026-10-14", p:"Y"}}}
 const BRM_SEED = {};
-const KEY = 'csf-brm-status-v1', SEL_KEY = 'csf-brm-selection', ADMIN_KEY = 'csf-brm-admin';
+
+// ---- Google Sheet link
+// Paste the Google Sheet's link (copied from the browser's address bar) between the quotes below.
+// Share the sheet as "Anyone with the link: Viewer" so this page can read it; give editors access by email.
+// The sheet has one tab per district, named exactly as the districts in BRM_BLOCKS, with Month and Block columns.
+// While a link is set, the sheet is the only source of BRM status: in-page editing and CSV upload switch off.
+// Leave it empty to keep the in-browser editing and CSV upload.
+const BRM_SHEET_URL = 'https://docs.google.com/spreadsheets/d/19LMq7bwi0B37FcatRpLGbtoXqqdxA0V28E91_EVubtY/edit?gid=776423118#gid=776423118';
+const SHEET_REFRESH_MS = 2 * 60 * 1000;
+function sheetCsvUrl(u){
+  const m = String(u || '').match(/\/spreadsheets\/d\/([\w-]+)/);
+  return m && m[1] !== 'e' ? 'https://docs.google.com/spreadsheets/d/' + m[1] + '/gviz/tq?tqx=out:csv&headers=1' : '';
+}
+function sheetEditUrl(u){ const m = String(u || '').match(/\/spreadsheets\/d\/([\w-]+)/); return m && m[1] !== 'e' ? 'https://docs.google.com/spreadsheets/d/' + m[1] + '/edit' : ''; }
+const SHEET = sheetCsvUrl(BRM_SHEET_URL), SHEET_EDIT = sheetEditUrl(BRM_SHEET_URL);
+let sheetData = {}, sheetAt = 0, sheetErr = '', sheetBusy = false, sheetMissing = [];
+const KEY = 'csf-brm-status-v1', SEL_KEY = 'csf-brm-selection', ADMIN_KEY = 'csf-brm-admin', SHEET_KEY = 'csf-brm-sheet-cache';
 const CRED = 'adda420b3e0e023ea8fa753ef33a38e04ea8f0d5ac4d6bcdc725fda9a998574b';
 const DISTS = Object.keys(BRM_BLOCKS);
 const TOTAL = DISTS.reduce((t,d) => t + BRM_BLOCKS[d].length, 0);
 const MONTHS = [];
-for (let y = 2026, m = 4; !(y === 2027 && m === 4); m++) { if (m > 12) { m = 1; y++; } MONTHS.push(y + '-' + String(m).padStart(2,'0')); }
+for (let y = 2026, m = 10; !(y === 2027 && m === 4); m++) { if (m > 12) { m = 1; y++; } MONTHS.push(y + '-' + String(m).padStart(2,'0')); }
 const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const mLabel = k => MN[+k.slice(5)-1] + ' ' + k.slice(0,4);
 const mLong = k => ['January','February','March','April','May','June','July','August','September','October','November','December'][+k.slice(5)-1] + ' ' + k.slice(0,4);
@@ -653,7 +683,7 @@ const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, 
 let store = {};
 try { store = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { store = {}; }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} }
-function rec(month, d, b){ const k = d + '|' + b; return (store[month] && store[month][k]) || (BRM_SEED[month] && BRM_SEED[month][k]) || {}; }
+function rec(month, d, b){ const k = d + '|' + b; if (SHEET) return (sheetData[month] && sheetData[month][k]) || {}; return (store[month] && store[month][k]) || (BRM_SEED[month] && BRM_SEED[month][k]) || {}; }
 function setRec(month, d, b, r){ store[month] = store[month] || {}; store[month][d + '|' + b] = r; save(); }
 function status(r){ if (r.c === 'Y' && r.p === 'Y') return 'done'; if (r.c === 'Y') return 'wait'; if (r.c === 'N') return 'no'; return 'none'; }
 const CHIP = { done:'Complete', wait:'Proceedings pending', no:'Not conducted', none:'Not reported' };
@@ -733,7 +763,14 @@ function sha256(str){
 function renderAdmin(){
   $('brmWho').innerHTML = admin ? 'Signed in as <b>Admin</b>' : 'View only';
   $('brmLogin').textContent = admin ? 'Sign out' : 'Admin sign-in';
-  $('brmImport').hidden = !admin;
+  $('brmImport').hidden = !admin || !!SHEET;
+  if (SHEET) {
+    $('syncOpen').hidden = !admin || !SHEET_EDIT;
+    $('bLock').textContent = admin
+      ? 'Status comes from the Google Sheet. Select Edit in Google Sheet to update it; this page picks up changes within about two minutes, or select Refresh.'
+      : 'View only. Status comes from the Google Sheet kept by the state team.';
+    return;
+  }
   $('bLock').textContent = admin
     ? 'You can edit this table. Entering a date marks the BRM as conducted. Changes save in this browser; download the CSV to share them.'
     : 'View only. Sign in as admin to update BRM status.';
@@ -753,7 +790,7 @@ $('lform').addEventListener('submit', async e => {
   const h = await sha256($('lUser').value.trim() + '\n' + $('lPass').value.trim());
   if (h !== CRED) { $('lErr').textContent = 'Username or password is incorrect. Check both and try again.'; $('lPass').value = ''; $('lPass').focus(); return; }
   admin = true; try { sessionStorage.setItem(ADMIN_KEY, CRED); } catch(e){}
-  closeLogin(); renderAdmin(); renderBlocks(); toast('Signed in. You can now update BRM status.');
+  closeLogin(); renderAdmin(); renderBlocks(); toast(SHEET ? 'Signed in. Use Edit in Google Sheet to update BRM status.' : 'Signed in. You can now update BRM status.');
 });
 
 // ---- Rendering
@@ -787,7 +824,8 @@ function renderMatrix(){
 }
 function blockRow(m, d, b){
   const r = rec(m, d, b), s = status(r), id = esc(d + '|' + b);
-  if (!admin) return `<tr data-k="${id}"><td>${esc(b)}</td><td class="ro vo" tabindex="0" title="Please sign in to update">${yn(r.c) || '–'}</td><td class="vo" tabindex="0" title="Please sign in to update">${fmtDate(r.d)}</td><td class="ro vo" tabindex="0" title="Please sign in to update">${yn(r.p) || '–'}</td><td><span class="chip ${s}">${CHIP[s]}</span></td></tr>`;
+  const tip = SHEET ? 'Update this in the Google Sheet' : 'Please sign in to update';
+  if (!admin || SHEET) return `<tr data-k="${id}"><td>${esc(b)}</td><td class="ro vo" tabindex="0" title="${tip}">${yn(r.c) || '–'}</td><td class="vo" tabindex="0" title="${tip}">${fmtDate(r.d)}</td><td class="ro vo" tabindex="0" title="${tip}">${yn(r.p) || '–'}</td><td><span class="chip ${s}">${CHIP[s]}</span></td></tr>`;
   const last = new Date(+m.slice(0,4), +m.slice(5), 0).getDate();
   return `<tr data-k="${id}"><td>${esc(b)}</td>
     <td><select class="sm" data-f="c" aria-label="BRM conducted in ${esc(b)}"><option value="">Select</option><option value="Y"${r.c==='Y'?' selected':''}>Yes</option><option value="N"${r.c==='N'?' selected':''}>No</option></select></td>
@@ -814,16 +852,16 @@ $('dTable').addEventListener('click', e => {
 $('dTable').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr.dist')) { e.preventDefault(); e.target.click(); } });
 
 function askSignIn(e){
-  if (admin) return;
+  if (admin && !SHEET) return;
   if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
   const td = e.target.closest('td'); if (!td || td.cellIndex < 1 || td.cellIndex > 3) return;
   if (e.type === 'keydown') e.preventDefault();
-  toast('Please sign in');
+  toast(!SHEET ? 'Please sign in' : admin ? 'Update this in the Google Sheet' : 'View only. Status comes from the Google Sheet.');
 }
 $('bTable').addEventListener('click', askSignIn);
 $('bTable').addEventListener('keydown', askSignIn);
 $('bTable').addEventListener('change', e => {
-  if (!admin) return;
+  if (!admin || SHEET) return;
   const el = e.target.closest('[data-f]'); if (!el) return;
   const tr = el.closest('tr'), [d, b] = tr.dataset.k.split('|'), m = selM.value;
   const r = Object.assign({}, rec(m, d, b)), f = el.dataset.f, v = el.value;
@@ -879,12 +917,14 @@ function toMonth(v){
 function toDate(v){
   v = String(v || '').trim(); if (!v) return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-  const m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  let m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  m = v.match(/^(\d{1,2})[\s.-]+([A-Za-z]{3})[A-Za-z]*[\s.,-]+(\d{4})$/);
+  if (m) { const i = MN.findIndex(x => x.toLowerCase() === m[2].toLowerCase()); if (i >= 0) return m[3] + '-' + String(i+1).padStart(2,'0') + '-' + m[1].padStart(2,'0'); }
   return '';
 }
-$('brmImport').addEventListener('click', () => { if (admin) $('brmFile').click(); });
+$('brmImport').addEventListener('click', () => { if (admin && !SHEET) $('brmFile').click(); });
 $('brmFile').addEventListener('change', async e => {
-  if (!admin) return;
+  if (!admin || SHEET) return;
   const file = e.target.files[0]; if (!file) return;
   const rows = parseCSV(await file.text()); e.target.value = '';
   if (!rows.length) { toast('That file is empty.'); return; }
@@ -1053,8 +1093,80 @@ $('brmPdf').addEventListener('click', e => busy(e.currentTarget, async () => {
   toast('PDF downloaded');
 }));
 
+// ---- Google Sheet sync
+function sheetRecords(rows, dist, data){
+  if (!rows.length) return false;
+  const h = rows[0].map(x => x.trim().toLowerCase()), ix = n => h.findIndex(x => x.startsWith(n));
+  const iM = ix('month'), iB = ix('block'), iC = ix('brm conducted'), iT = ix('date'), iP = ix('proceedings');
+  if (iM < 0 || iB < 0) return false;
+  const lookup = {}; BRM_BLOCKS[dist].forEach(b => { lookup[b.toLowerCase()] = [dist, b]; });
+  rows.slice(1).forEach(r => {
+    const m = toMonth(r[iM]), hit = lookup[String(r[iB] || '').trim().toLowerCase()];
+    if (!m || !MONTHS.includes(m) || !hit) return;
+    const rc = { c: iC >= 0 ? toYN(r[iC]) : '', d: iT >= 0 ? toDate(r[iT]) : '', p: iP >= 0 ? toYN(r[iP]) : '' };
+    if (rc.d && rc.d.slice(0,7) !== m) rc.d = '';
+    if (rc.d && !rc.c) rc.c = 'Y';
+    if (rc.c !== 'Y') rc.p = '';
+    if (!rc.c && !rc.d && !rc.p) return;
+    (data[m] = data[m] || {})[hit[0] + '|' + hit[1]] = rc;
+  });
+  return true;
+}
+function syncTime(t){
+  const d = new Date(t), today = new Date().toDateString() === d.toDateString();
+  const hm = d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  return today ? hm : d.getDate() + ' ' + MN[d.getMonth()] + ', ' + hm;
+}
+function renderSync(){
+  const bar = $('brmSync'); if (!SHEET) return;
+  bar.hidden = false;
+  bar.classList.toggle('busy', sheetBusy); bar.classList.toggle('err', !!sheetErr && !sheetBusy);
+  let t;
+  if (sheetBusy && !sheetAt) t = 'Loading from Google Sheet…';
+  else if (sheetErr === 'tabs') t = 'Live from Google Sheet, last updated ' + syncTime(sheetAt) + '. Could not read the tab' + (sheetMissing.length > 1 ? 's' : '') + ' for ' + sheetMissing.join(', ') + ': check the tab name matches the district and has Month and Block columns.';
+  else if (sheetErr) t = 'Could not read the Google Sheet. Check that it is shared as “Anyone with the link can view”.' + (sheetAt ? ' Showing data from ' + syncTime(sheetAt) + '.' : '');
+  else t = 'Live from Google Sheet, last updated ' + syncTime(sheetAt);
+  $('syncTxt').textContent = t;
+  $('syncRefresh').disabled = sheetBusy;
+  if (SHEET_EDIT) $('syncOpen').href = SHEET_EDIT;
+}
+async function loadSheet(manual){
+  if (!SHEET || sheetBusy) return;
+  sheetBusy = true; renderSync();
+  try {
+    const stamp = Date.now();
+    const results = await Promise.all(DISTS.map(d =>
+      fetch(SHEET + '&sheet=' + encodeURIComponent(d) + '&_=' + stamp, { cache: 'no-store' })
+        .then(r => r.ok ? r.text() : Promise.reject(new Error('net')))
+        .then(txt => ({ d, txt }), () => ({ d, txt: null }))));
+    if (results.every(x => x.txt === null || /^\s*</.test(x.txt))) throw new Error('net');
+    const data = {}, missing = [];
+    results.forEach(({ d, txt }) => {
+      if (txt !== null && !/^\s*</.test(txt) && sheetRecords(parseCSV(txt), d, data)) return;
+      missing.push(d);
+      // Keep the last good data for a tab that could not be read
+      MONTHS.forEach(m => BRM_BLOCKS[d].forEach(b => { const k = d + '|' + b, r = sheetData[m] && sheetData[m][k]; if (r) (data[m] = data[m] || {})[k] = r; }));
+    });
+    sheetData = data; sheetAt = Date.now(); sheetMissing = missing; sheetErr = missing.length ? 'tabs' : '';
+    try { localStorage.setItem(SHEET_KEY, JSON.stringify({ src: SHEET, at: sheetAt, data: sheetData })); } catch(e){}
+    renderAll();
+    if (manual) toast('Updated from the Google Sheet');
+  } catch(err) {
+    sheetErr = 'net';
+    if (manual) toast('Could not read the Google Sheet');
+  } finally { sheetBusy = false; renderSync(); }
+}
+if (SHEET) {
+  try { const c = JSON.parse(localStorage.getItem(SHEET_KEY) || 'null'); if (c && c.src === SHEET) { sheetData = c.data || {}; sheetAt = c.at || 0; } } catch(e){}
+  $('syncRefresh').addEventListener('click', () => loadSheet(true));
+  setInterval(() => { if (!document.hidden) loadSheet(); }, SHEET_REFRESH_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - sheetAt > 30000) loadSheet(); });
+}
+
 renderAdmin();
 renderAll();
+renderSync();
+loadSheet();
 })();
 
 // Tabs
