@@ -224,6 +224,14 @@ table.mx th.m{text-align:center}
 table.mx th.m.cur{color:var(--field)}
 table.mx td.c.na{color:var(--soft);font-weight:400}
 table.mx tr.tot td{font-weight:800}
+table.bm td.s{text-align:center;min-width:84px;font-size:.78rem;font-weight:700;white-space:nowrap;border:2px solid var(--raised);border-radius:6px}
+table.bm td.s.done{background:#00316B;color:#fff}
+table.bm td.s.wait{background:#FFD400;color:#00316B}
+table.bm td.s.no{color:#C55F34;box-shadow:inset 0 0 0 1.5px #C55F34}
+table.bm td.s.none{color:var(--soft);font-weight:400}
+table.bm tr.sel td:first-child{font-weight:700;color:var(--field)}
+table.bm tr.tot td{border-top:2px solid var(--rule)}
+table.bm td:first-child{white-space:nowrap}
 
 /* Block list */
 .bl-dist td{background:var(--paper);font-weight:700;color:var(--field)}
@@ -387,7 +395,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
   #bTable td .sm{flex:0 1 auto;max-width:60%}
   #bTable td.vo{cursor:default}
   /* Wide tables keep the district name in view while they scroll */
-  #dTable td:first-child,#dTable th:first-child,#mTable td:first-child,#mTable th:first-child{position:sticky;left:0;z-index:1;background:var(--raised);box-shadow:inset 0 -1px 0 var(--rule),1px 0 0 var(--rule)}
+  #dTable td:first-child,#dTable th:first-child,#mTable td:first-child,#mTable th:first-child,#bmTable td:first-child,#bmTable th:first-child{position:sticky;left:0;z-index:1;background:var(--raised);box-shadow:inset 0 -1px 0 var(--rule),1px 0 0 var(--rule)}
   details.fold .inner table thead th:first-child{z-index:2}
   #dTable tr.dist.sel td:first-child{background:var(--harvest-soft)}
   .pbar{min-width:120px}
@@ -563,7 +571,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
         <div class="dl" id="dlWrap">
           <button class="btn" type="button" id="dlBtn" aria-haspopup="true" aria-expanded="false" aria-controls="dlMenu">Download</button>
           <div class="dl-menu" id="dlMenu" role="menu" hidden>
-            <button type="button" role="menuitem" id="brmXlsx"><b>Excel</b><span>Block status, district summary and monthly view</span></button>
+            <button type="button" role="menuitem" id="brmXlsx"><b>Excel</b><span>Block status, district summary and monthly views</span></button>
             <button type="button" role="menuitem" id="brmPdf"><b>PDF</b><span>Printable report for the selected month</span></button>
             <button type="button" role="menuitem" id="brmExport"><b>CSV</b><span>Plain data, the format Upload CSV accepts</span></button>
           </div>
@@ -603,8 +611,13 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
     </details>
 
     <details class="fold" id="foldMonth">
-      <summary>Monthly completion by district<small>Each district out of 100%, October 2026 to March 2027</small></summary>
+      <summary>Monthly completion by district<small>Each district out of 100%, April 2026 to March 2027</small></summary>
       <div class="inner scroll"><table class="t mx" id="mTable"><thead></thead><tbody></tbody></table></div>
+    </details>
+
+    <details class="fold" id="foldBlockMonth" open>
+      <summary>Monthly completion by block<small id="foldBmNote"></small></summary>
+      <div class="inner scroll"><table class="t mx bm" id="bmTable"><thead></thead><tbody></tbody></table></div>
     </details>
     <p class="foot">Block list: 30 districts, 314 blocks. District and block names follow the spellings used in the baseline report cards.</p>
 </section>
@@ -893,7 +906,7 @@ stage.addEventListener('focusout', () => tip.classList.remove('show'));
 const start = ORDER.find(d => '#' + d.toLowerCase() === location.hash);
 if (start) openReport(start, false);
 </script>
-<script type="application/json" id="drc-data">{"labels":["Letter Identification","Word Reading","Sentence Reading","Reading Comprehension","Letter Writing","Number Identification","Counting in Bundles","Number Patterns","Addition","Subtraction"],"d":{"Nuapada":{"sc":141,"ch":1721,"bl":5,"lit":{"t":[2173,1703,4729],"c":[[453,365,903],[621,267,833],[349,248,1124],[306,398,1017],[444,425,852]],"e":[1721,148,481]},"num":{"t":[2368,1692,4545],"c":[[632,324,765],[456,364,901],[491,397,833],[389,310,1022],[400,297,1024]],"e":[1721,145,473]}},"Koraput":{"sc":510,"ch":5319,"bl":14,"lit":{"t":[9992,5177,11426],"c":[[1916,1151,2252],[2571,920,1828],[1619,824,2876],[1857,991,2471],[2029,1291,1999]],"e":[5319,1010,927]},"num":{"t":[10224,4963,11408],"c":[[2544,1019,1756],[1911,1039,2369],[2028,1105,2186],[1818,911,2590],[1923,889,2507]],"e":[5319,974,990]}},"Bhadrak":{"sc":140,"ch":761,"bl":7,"lit":{"t":[2728,326,736],"c":[[561,69,131],[622,42,97],[525,70,166],[494,76,183],[526,69,159]],"e":[747,418,55]},"num":{"t":[2751,300,754],"c":[[634,23,104],[542,62,157],[535,72,154],[533,69,159],[507,74,180]],"e":[761,393,68]}},"Sundaragada":{"sc":653,"ch":5179,"bl":17,"lit":{"t":[10958,4878,10059],"c":[[2227,1027,1925],[2834,712,1633],[1828,923,2428],[1775,1274,2130],[2294,942,1943]],"e":[5179,1133,793]},"num":{"t":[10554,4833,10508],"c":[[2707,769,1703],[2075,915,2189],[2034,1126,2019],[1859,1031,2289],[1879,992,2308]],"e":[5179,1043,825]}},"Ganjam":{"sc":593,"ch":5219,"bl":22,"lit":{"t":[15388,3990,6717],"c":[[3255,739,1225],[3688,527,1004],[2688,750,1781],[2487,1183,1549],[3270,791,1158]],"e":[5219,1875,552]},"num":{"t":[14974,3191,7930],"c":[[3856,504,859],[3233,652,1334],[2733,793,1693],[2629,580,2010],[2523,662,2034]],"e":[5219,1838,619]}},"Mayurbhanj":{"sc":567,"ch":7782,"bl":26,"lit":{"t":[16400,7791,14719],"c":[[3218,1740,2824],[4488,1187,2107],[2826,1368,3588],[2680,1644,3458],[3188,1852,2742]],"e":[7782,1740,1263]},"num":{"t":[18219,5684,15007],"c":[[5159,858,1765],[3760,1122,2900],[3177,1469,3136],[3032,1101,3649],[3091,1134,3557]],"e":[7782,1913,1118]}},"Boudh":{"sc":203,"ch":1231,"bl":3,"lit":{"t":[2780,1049,2326],"c":[[583,230,418],[734,123,374],[477,182,572],[382,288,561],[604,226,401]],"e":[1231,261,183]},"num":{"t":[2622,956,2577],"c":[[668,160,403],[497,184,550],[476,204,551],[485,222,524],[496,186,549]],"e":[1231,234,210]}},"Kandhamala":{"sc":24,"ch":142,"bl":9,"lit":{"t":[435,120,155],"c":[[84,21,37],[105,15,22],[75,27,40],[87,30,25],[84,27,31]],"e":[142,59,10]},"num":{"t":[408,116,186],"c":[[100,14,28],[80,32,30],[78,23,41],[71,28,43],[79,19,44]],"e":[142,42,9]}},"Anugola":{"sc":403,"ch":2981,"bl":8,"lit":{"t":[7836,2772,4297],"c":[[1649,508,824],[2023,358,600],[1435,523,1023],[1241,786,954],[1488,597,896]],"e":[2981,904,361]},"num":{"t":[7401,2436,5068],"c":[[1991,393,597],[1572,488,921],[1349,603,1029],[1236,470,1275],[1253,482,1246]],"e":[2981,826,399]}},"Dhenkanal":{"sc":23,"ch":142,"bl":6,"lit":{"t":[346,108,256],"c":[[69,29,44],[86,18,38],[61,20,61],[60,20,62],[70,21,51]],"e":[142,43,27]},"num":{"t":[355,91,264],"c":[[100,14,28],[76,20,46],[65,22,55],[61,19,62],[53,16,73]],"e":[142,35,24]}}},"ki":{"Nuapada":[{"h":"Weakest task: Sentence reading","t":[{"v":"65.3%","b":"k"},{"v":"20.3%","b":"a"},{"n":"1,124 children need support; at least 56% Kadha in every block"}]},{"h":"Lowest Phala: Reading comprehension","t":[{"v":"17.8%","b":"a"},{"v":"23.1%","b":"p"},{"v":"59.1%","b":"k"}]},{"h":"Numeracy concerns: Subtraction and addition","t":[{"l":"Subtraction"},{"v":"59.5%","b":"k"},{"l":"Addition"},{"v":"59.4%","b":"k"}]},{"h":"Strongest: Number identification and word reading","t":[{"l":"Number identification"},{"v":"36.7%","b":"a"},{"l":"Word reading"},{"v":"36.1%","b":"a"},{"n":"Even here, fewer than half have achieved"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"26.3%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"36.1%","b":"a"},{"n":"lower in all five blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"26.5%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"36.7%","b":"a"},{"n":"lower in all five blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Koraput":[{"h":"Weakest task: Sentence reading","t":[{"v":"54.1%","b":"k"},{"v":"30.4%","b":"a"},{"n":"2,876 children need support; blocks range 38.1% to 63.4% Kadha; also the lowest Phala"}]},{"h":"Numeracy concerns: Addition and subtraction","t":[{"l":"Addition"},{"v":"48.7%","b":"k"},{"l":"Subtraction"},{"v":"47.1%","b":"k"}]},{"h":"Strongest: Word reading and number identification","t":[{"l":"Word reading"},{"v":"48.3%","b":"a"},{"l":"Number identification"},{"v":"47.8%","b":"a"},{"n":"Even here, fewer than half have achieved"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"36.0%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"48.3%","b":"a"},{"n":"lower in all 14 blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"35.9%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"47.8%","b":"a"},{"n":"lower in all 14 blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Bhadrak":[{"h":"Weakest task: Reading comprehension","t":[{"v":"24.3%","b":"k"},{"v":"65.6%","b":"a"},{"n":"183 children need support; blocks range 12.3% to 44.7% Kadha; also the lowest Phala"}]},{"h":"Numeracy concerns: Subtraction and addition","t":[{"l":"Subtraction"},{"v":"23.7%","b":"k"},{"l":"Addition"},{"v":"20.9%","b":"k"}]},{"h":"Strongest: Number identification and word reading","t":[{"l":"Number identification"},{"v":"83.3%","b":"a"},{"l":"Word reading"},{"v":"81.7%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"73.7%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"81.7%","b":"a"},{"n":"lower in all seven blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"71.2%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"83.3%","b":"a"},{"n":"lower in six of seven blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Sundaragada":[{"h":"Weakest task: Sentence reading","t":[{"v":"46.9%","b":"k"},{"v":"35.3%","b":"a"},{"n":"2,428 children need support; blocks range 24.0% to 69.6% Kadha"}]},{"h":"Lowest Phala: Reading comprehension","t":[{"v":"34.3%","b":"a"},{"v":"24.6%","b":"p"},{"v":"41.1%","b":"k"}]},{"h":"Numeracy concerns: Subtraction and addition","t":[{"l":"Subtraction"},{"v":"44.6%","b":"k"},{"l":"Addition"},{"v":"44.2%","b":"k"}]},{"h":"Strongest: Word reading and number identification","t":[{"l":"Word reading"},{"v":"54.7%","b":"a"},{"l":"Number identification"},{"v":"52.3%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"43.0%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"54.7%","b":"a"},{"n":"lower in 16 of 17 blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"40.1%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"52.3%","b":"a"},{"n":"lower in all 17 blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Ganjam":[{"h":"Weakest task: Subtraction","t":[{"v":"39.0%","b":"k"},{"v":"48.3%","b":"a"},{"n":"2,034 children need support; blocks range 19.6% to 54.7% Kadha"}]},{"h":"Lowest Phala: Reading comprehension","t":[{"v":"47.7%","b":"a"},{"v":"22.7%","b":"p"},{"v":"29.7%","b":"k"}]},{"h":"Numeracy concerns: Subtraction and addition","t":[{"l":"Subtraction"},{"v":"39.0%","b":"k"},{"l":"Addition"},{"v":"38.5%","b":"k"}]},{"h":"Strongest: Number identification and word reading","t":[{"l":"Number identification"},{"v":"73.9%","b":"a"},{"l":"Word reading"},{"v":"70.7%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"62.4%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"70.7%","b":"a"},{"n":"lower in 21 of 22 blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"61.9%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"73.9%","b":"a"},{"n":"lower in all 22 blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Mayurbhanj":[{"h":"Weakest task: Addition","t":[{"v":"46.9%","b":"k"},{"v":"39.0%","b":"a"},{"n":"3,649 children need support; blocks range 28.2% to 65.9% Kadha"}]},{"h":"Lowest Phala: Reading comprehension","t":[{"v":"34.4%","b":"a"},{"v":"21.1%","b":"p"},{"v":"44.4%","b":"k"}]},{"h":"Numeracy concerns: Addition and subtraction","t":[{"l":"Addition"},{"v":"46.9%","b":"k"},{"l":"Subtraction"},{"v":"45.7%","b":"k"}]},{"h":"Strongest: Number identification and word reading","t":[{"l":"Number identification"},{"v":"66.3%","b":"a"},{"l":"Word reading"},{"v":"57.7%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"41.4%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"57.7%","b":"a"},{"n":"lower in all 26 blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"48.3%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"66.3%","b":"a"},{"n":"lower in all 26 blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Boudh":[{"h":"Weakest task: Sentence reading","t":[{"v":"46.5%","b":"k"},{"v":"38.7%","b":"a"},{"n":"572 children need support; at least 40% Kadha in every block"}]},{"h":"Lowest Phala: Reading comprehension","t":[{"v":"31.0%","b":"a"},{"v":"23.4%","b":"p"},{"v":"45.6%","b":"k"}]},{"h":"Numeracy concerns: Number patterns and counting in bundles","t":[{"l":"Number patterns"},{"v":"44.8%","b":"k"},{"l":"Counting in bundles"},{"v":"44.7%","b":"k"}]},{"h":"Strongest: Word reading and number identification","t":[{"l":"Word reading"},{"v":"59.6%","b":"a"},{"l":"Number identification"},{"v":"54.3%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"47.4%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"59.6%","b":"a"},{"n":"lower in all three blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"40.4%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"54.3%","b":"a"},{"n":"lower in all three blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Kandhamala":[{"h":"Weakest task: Subtraction","t":[{"v":"31.0%","b":"k"},{"v":"55.6%","b":"a"},{"n":"44 children need support; blocks range 0.0% to 100.0% Kadha"}]},{"h":"Lowest Phala: Addition","t":[{"v":"50.0%","b":"a"},{"v":"19.7%","b":"p"},{"v":"30.3%","b":"k"}]},{"h":"Literacy concerns: Sentence reading and letter identification","t":[{"l":"Sentence reading"},{"v":"28.2%","b":"k"},{"l":"Letter identification"},{"v":"26.1%","b":"k"}]},{"h":"Strongest: Word reading and number identification","t":[{"l":"Word reading"},{"v":"73.9%","b":"a"},{"l":"Number identification"},{"v":"70.4%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"59.2%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"73.9%","b":"a"},{"n":"lower in all nine blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"56.3%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"70.4%","b":"a"},{"n":"lower in five of nine blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Anugola":[{"h":"Weakest task: Addition","t":[{"v":"42.8%","b":"k"},{"v":"41.5%","b":"a"},{"n":"1,275 children need support; blocks range 33.5% to 49.2% Kadha; also the lowest Phala"}]},{"h":"Literacy concerns: Sentence reading and reading comprehension","t":[{"l":"Sentence reading"},{"v":"34.3%","b":"k"},{"l":"Reading comprehension"},{"v":"32.0%","b":"k"}]},{"h":"Strongest: Word reading and number identification","t":[{"l":"Word reading"},{"v":"67.9%","b":"a"},{"l":"Number identification"},{"v":"66.8%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"55.3%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"67.9%","b":"a"},{"n":"lower in all eight blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"52.7%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"66.8%","b":"a"},{"n":"lower in all eight blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}],"Dhenkanal":[{"h":"Weakest task: Subtraction","t":[{"v":"51.4%","b":"k"},{"v":"37.3%","b":"a"},{"n":"73 children need support; blocks range 28.6% to 84.6% Kadha; also the lowest Phala"}]},{"h":"Literacy concerns: Reading comprehension and sentence reading","t":[{"l":"Reading comprehension"},{"v":"43.7%","b":"k"},{"l":"Sentence reading"},{"v":"43.0%","b":"k"}]},{"h":"Strongest: Number identification and word reading","t":[{"l":"Number identification"},{"v":"70.4%","b":"a"},{"l":"Word reading"},{"v":"60.6%","b":"a"}]},{"h":"Phala, Phula and Kadha, task by task","chart":1},{"h":"Unusual pattern: easier tasks scoring lower","t":[{"line":[{"l":"Letter identification"},{"v":"48.6%","b":"a"},{"x":"vs"},{"l":"Word reading"},{"v":"60.6%","b":"a"},{"n":"lower in four of six blocks; six of 20 items are juktakshar"}]},{"line":[{"l":"Counting in bundles"},{"v":"53.5%","b":"a"},{"x":"vs"},{"l":"Number identification"},{"v":"70.4%","b":"a"},{"n":"lower in four of six blocks"}]},{"cap":"Worth checking whether the rubric for letter identification and counting in bundles is stricter."}]}]}}</script>
+<script type="application/json" id="drc-data">{"labels":["Letter Identification","Word Reading","Sentence Reading","Reading Comprehension","Letter Writing","Number Identification","Counting in Bundles","Number Patterns","Addition","Subtraction"],"d":{"Nuapada":{"sc":141,"ch":1721,"bl":5,"lit":{"t":[2173,1703,4729],"c":[[453,365,903],[621,267,833],[349,248,1124],[306,398,1017],[444,425,852]],"e":[1721,148,481]},"num":{"t":[2368,1692,4545],"c":[[632,324,765],[456,364,901],[491,397,833],[389,310,1022],[400,297,1024]],"e":[1721,145,473]}},"Koraput":{"sc":510,"ch":5319,"bl":14,"lit":{"t":[9992,5177,11426],"c":[[1916,1151,2252],[2571,920,1828],[1619,824,2876],[1857,991,2471],[2029,1291,1999]],"e":[5319,1010,927]},"num":{"t":[10224,4963,11408],"c":[[2544,1019,1756],[1911,1039,2369],[2028,1105,2186],[1818,911,2590],[1923,889,2507]],"e":[5319,974,990]}},"Bhadrak":{"sc":140,"ch":761,"bl":7,"lit":{"t":[2728,326,736],"c":[[561,69,131],[622,42,97],[525,70,166],[494,76,183],[526,69,159]],"e":[747,418,55]},"num":{"t":[2751,300,754],"c":[[634,23,104],[542,62,157],[535,72,154],[533,69,159],[507,74,180]],"e":[761,393,68]}},"Sundaragada":{"sc":653,"ch":5179,"bl":17,"lit":{"t":[10958,4878,10059],"c":[[2227,1027,1925],[2834,712,1633],[1828,923,2428],[1775,1274,2130],[2294,942,1943]],"e":[5179,1133,793]},"num":{"t":[10554,4833,10508],"c":[[2707,769,1703],[2075,915,2189],[2034,1126,2019],[1859,1031,2289],[1879,992,2308]],"e":[5179,1043,825]}},"Ganjam":{"sc":593,"ch":5219,"bl":22,"lit":{"t":[15388,3990,6717],"c":[[3255,739,1225],[3688,527,1004],[2688,750,1781],[2487,1183,1549],[3270,791,1158]],"e":[5219,1875,552]},"num":{"t":[14974,3191,7930],"c":[[3856,504,859],[3233,652,1334],[2733,793,1693],[2629,580,2010],[2523,662,2034]],"e":[5219,1838,619]}},"Mayurbhanj":{"sc":567,"ch":7782,"bl":26,"lit":{"t":[16400,7791,14719],"c":[[3218,1740,2824],[4488,1187,2107],[2826,1368,3588],[2680,1644,3458],[3188,1852,2742]],"e":[7782,1740,1263]},"num":{"t":[18219,5684,15007],"c":[[5159,858,1765],[3760,1122,2900],[3177,1469,3136],[3032,1101,3649],[3091,1134,3557]],"e":[7782,1913,1118]}},"Boudh":{"sc":203,"ch":1231,"bl":3,"lit":{"t":[2780,1049,2326],"c":[[583,230,418],[734,123,374],[477,182,572],[382,288,561],[604,226,401]],"e":[1231,261,183]},"num":{"t":[2622,956,2577],"c":[[668,160,403],[497,184,550],[476,204,551],[485,222,524],[496,186,549]],"e":[1231,234,210]}},"Kandhamala":{"sc":24,"ch":142,"bl":9,"lit":{"t":[435,120,155],"c":[[84,21,37],[105,15,22],[75,27,40],[87,30,25],[84,27,31]],"e":[142,59,10]},"num":{"t":[408,116,186],"c":[[100,14,28],[80,32,30],[78,23,41],[71,28,43],[79,19,44]],"e":[142,42,9]}},"Anugola":{"sc":403,"ch":2981,"bl":8,"lit":{"t":[7836,2772,4297],"c":[[1649,508,824],[2023,358,600],[1435,523,1023],[1241,786,954],[1488,597,896]],"e":[2981,904,361]},"num":{"t":[7401,2436,5068],"c":[[1991,393,597],[1572,488,921],[1349,603,1029],[1236,470,1275],[1253,482,1246]],"e":[2981,826,399]}},"Dhenkanal":{"sc":23,"ch":142,"bl":6,"lit":{"t":[346,108,256],"c":[[69,29,44],[86,18,38],[61,20,61],[60,20,62],[70,21,51]],"e":[142,43,27]},"num":{"t":[355,91,264],"c":[[100,14,28],[76,20,46],[65,22,55],[61,19,62],[53,16,73]],"e":[142,35,24]}}}}</script>
 <script>
 // ---- District report cards: literacy and numeracy, never averaged together
 (function(){
@@ -1049,7 +1062,7 @@ if (start) openReport(start, false);
       doc.setFont('PublicSans', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...C.ink); doc.text(b.name, tx + 20, y + 17);
       doc.setFont('PublicSans', 'normal'); doc.setFontSize(7); doc.setTextColor(...C.soft); doc.text(b.desc, tx + 8, y + 27);
       doc.setFont('PublicSans', 'bold'); doc.setFontSize(16); doc.setTextColor(...C.ink); doc.text(fp(pc(sub.t[i], n)), tx + 8, y + 45);
-      doc.setFont('PublicSans', 'normal'); doc.setTextColor(...C.soft); { const ct = fmt(sub.t[i]) + ' of ' + fmt(n) + ' results'; let fs = 6.8; doc.setFontSize(fs); while (doc.getTextWidth(ct) > tw - 12 && fs > 5) { fs -= 0.2; doc.setFontSize(fs); } doc.text(ct, tx + 8, y + 56); }
+      doc.setFont('PublicSans', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...C.soft); doc.text(fmt(sub.t[i]) + ' of ' + fmt(n) + ' results', tx + 8, y + 56);
     });
     // children in one band on every competency
     y += th + 8; const ew = (cw - 6) / 2, eh = 42;
@@ -1117,89 +1130,10 @@ if (start) openReport(start, false);
       // note
       doc.setFont('PublicSans', 'normal'); doc.setFontSize(7.8); doc.setTextColor(...C.soft);
       doc.text(doc.splitTextToSize('Percentages are shares of all results in the subject: one result per child per competency, so ' + fmt(x.ch) + ' children across five competencies. The ‘' + ALL_LBL + '’ line is the pooled figure for every district with baseline results.', W - 2 * M), M, end + 14);
-      // ---- Page 2: key findings (from the district overview)
-      const KI = D.ki && D.ki[d];
-      if (KI && KI.length) {
-        doc.addPage();
-        doc.setFillColor(...C.blue); doc.rect(0, 0, W, 50, 'F'); doc.setFillColor(...C.yel); doc.rect(0, 50, W, 4, 'F');
-        doc.setFont('PublicSans', 'bold'); doc.setFontSize(14); doc.setTextColor(255, 255, 255); doc.text(d + ' district report card: key findings', M, 31);
-        let y = 80;
-        doc.setFont('PublicSans', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...C.soft);
-        doc.text('Share of children in each band, task by task. Findings are taken from the district overview.', M, y);
-        y += 14;
-        const right = W - M, tx0 = M + 28;
-        const PILL = { a:{ bg:[228,245,234], fg:C.a }, p:{ bg:[237,237,237], fg:C.ink }, k:{ bg:C.kbg, fg:C.k } };
-        const NAME = { a:'Phala', p:'Phula', k:'Kadha' };
-        function flow(toks, y0){
-          let x = tx0, y = y0;
-          const need = wdt => { if (x + wdt > right && x > tx0) { x = tx0; y += 17; } };
-          toks.forEach(t => {
-            if (t.line) { if (x > tx0) { x = tx0; y += 17; } y = flow(t.line, y) + 3; x = tx0; return; }
-            if (t.cap) {
-              if (x > tx0) { x = tx0; y += 17; }
-              doc.setFont('PublicSans', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...C.soft);
-              const ls = doc.splitTextToSize(t.cap, right - tx0); doc.text(ls, tx0, y + 3); y += ls.length * 11; return;
-            }
-            if (t.v) {
-              doc.setFont('PublicSans', 'bold'); doc.setFontSize(9);
-              const vw = doc.getTextWidth(t.v); doc.setFont('PublicSans', 'normal'); doc.setFontSize(8.5);
-              const nw = doc.getTextWidth(NAME[t.b]), pw = 6 + 9 + 3 + vw + 4 + nw + 7;
-              need(pw);
-              doc.setFillColor(...PILL[t.b].bg); doc.roundedRect(x, y - 8.5, pw, 13, 6.5, 6.5, 'F');
-              sym(doc, t.b, x + 10.5, y - 2, 3.4);
-              doc.setFont('PublicSans', 'bold'); doc.setFontSize(9); doc.setTextColor(...PILL[t.b].fg); doc.text(t.v, x + 18, y + 1.2);
-              doc.setFont('PublicSans', 'normal'); doc.setFontSize(8.5); doc.text(NAME[t.b], x + 18 + vw + 4, y + 1.2);
-              x += pw + 6; return;
-            }
-            const bold = !!t.l, s = t.l || t.x || t.n || '';
-            doc.setFont('PublicSans', bold ? 'bold' : 'normal'); doc.setFontSize(t.n ? 8.5 : 9);
-            doc.setTextColor(...(t.n || t.x ? C.soft : C.ink));
-            s.split(' ').forEach((word, i, arr) => {
-              const piece = word + (i < arr.length - 1 ? ' ' : ''), pw2 = doc.getTextWidth(piece);
-              need(pw2); doc.text(piece, x, y + 1.2); x += pw2;
-            });
-            x += 6;
-          });
-          return x > tx0 ? y + 17 : y;
-        }
-        function chart(y0){
-          let y = y0;
-          SUBJ.forEach(s => {
-            const sub = x[s.k], kp = sub.c.map(c => pc(c[2], tot(c))), worst = kp.indexOf(Math.max.apply(null, kp));
-            doc.setFont('PublicSans', 'bold'); doc.setFontSize(8); doc.setTextColor(...C.soft); doc.text(s.name, tx0, y + 2); y += 10;
-            sub.c.forEach((c, j) => {
-              doc.setFont('PublicSans', j === worst ? 'bold' : 'normal'); doc.setFontSize(8.5); doc.setTextColor(...C.ink);
-              doc.text(s.codes[j] + '  ' + sentence(s.labels[j]), tx0, y + 7.5);
-              pBar(doc, tx0 + 150, y, 210, 10, c, false);
-              pVals(doc, tx0 + 370, y + 8, c, 8);
-              y += 16;
-            });
-            y += 4;
-          });
-          doc.setFont('PublicSans', 'normal'); doc.setFontSize(8); doc.setTextColor(...C.soft);
-          doc.text('Each bar is 100% of children assessed on that task. Bold task = highest Kadha in the subject.', tx0, y + 3);
-          return y + 14;
-        }
-        KI.forEach((it, i) => {
-          y += 12;
-          if (y > H - 110) { doc.addPage(); y = 50; }
-          doc.setDrawColor(...C.rule); doc.setLineWidth(0.6); if (i) doc.line(M, y - 10, right, y - 10);
-          doc.setFillColor(...C.blue); doc.circle(M + 9, y + 3, 9, 'F');
-          doc.setFont('PublicSans', 'bold'); doc.setFontSize(9.5); doc.setTextColor(255, 255, 255); doc.text(String(i + 1), M + 9, y + 6.3, { align: 'center' });
-          doc.setFontSize(11); doc.setTextColor(...C.ink); doc.text(it.h, tx0, y + 7);
-          y += 25;
-          y = it.chart ? chart(y) : flow(it.t, y);
-        });
-      }
-      // footers on every page
-      const pages = doc.getNumberOfPages();
-      for (let i = 1; i <= pages; i++) {
-        doc.setPage(i);
-        doc.setDrawColor(...C.rule); doc.setLineWidth(0.6); doc.line(M, H - 30, W - M, H - 30);
-        doc.setFont('PublicSans', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...C.soft);
-        doc.text('Odisha FLN baseline, ' + d + ' district report card  |  Downloaded ' + now.getDate() + ' ' + MN[now.getMonth()] + ' ' + now.getFullYear(), M, H - 18);
-        doc.text('Page ' + i + ' of ' + pages, W - M, H - 18, { align: 'right' });
-      }
+      // footer
+      doc.setDrawColor(...C.rule); doc.line(M, H - 30, W - M, H - 30);
+      doc.setFontSize(7.5); doc.text('Odisha FLN baseline, district report card', M, H - 18);
+      doc.text('Downloaded ' + now.getDate() + ' ' + MN[now.getMonth()] + ' ' + now.getFullYear(), W - M, H - 18, { align: 'right' });
       const blob = doc.output('blob'), a = document.createElement('a');
       a.href = URL.createObjectURL(blob); a.download = 'District_report_card_' + d + '.pdf';
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -1265,7 +1199,7 @@ const CRED = 'adda420b3e0e023ea8fa753ef33a38e04ea8f0d5ac4d6bcdc725fda9a998574b';
 const DISTS = Object.keys(BRM_BLOCKS);
 const TOTAL = DISTS.reduce((t,d) => t + BRM_BLOCKS[d].length, 0);
 const MONTHS = [];
-for (let y = 2026, m = 10; !(y === 2027 && m === 4); m++) { if (m > 12) { m = 1; y++; } MONTHS.push(y + '-' + String(m).padStart(2,'0')); }
+for (let y = 2026, m = 4; !(y === 2027 && m === 4); m++) { if (m > 12) { m = 1; y++; } MONTHS.push(y + '-' + String(m).padStart(2,'0')); }
 const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const mLabel = k => MN[+k.slice(5)-1] + ' ' + k.slice(0,4);
 const mLong = k => ['January','February','March','April','May','June','July','August','September','October','November','December'][+k.slice(5)-1] + ' ' + k.slice(0,4);
@@ -1430,11 +1364,24 @@ function renderBlocks(){
   $('bTable').tBodies[0].innerHTML = list.map(x => blockRow(m, d, x)).join('');
   $('bTitle').textContent = (b ? b + ' block, ' + d : d + ' blocks') + ', ' + mLong(m);
 }
-function renderAll(){ renderStats(); renderDistricts(); renderMatrix(); renderBlocks(); writeSel(); }
+const SHORT = { done:'Complete', wait:'Pending', no:'Not held', none:'–' };
+function renderBlockMatrix(){
+  const d = selD.value, m = selM.value, b = selB.value;
+  $('bmTable').tHead.innerHTML = '<tr><th>Block</th>' + MONTHS.map(k => `<th class="m${k === m ? ' cur' : ''}">${mLabel(k)}</th>`).join('') + '<th class="n">Months complete</th></tr>';
+  const rows = BRM_BLOCKS[d].map(x => {
+    let n = 0;
+    const cells = MONTHS.map(k => { const s = status(rec(k, d, x)); if (s === 'done') n++; return `<td class="s ${s}" title="${esc(x)}, ${mLong(k)}: ${CHIP[s]}">${SHORT[s]}</td>`; }).join('');
+    return `<tr${x === b ? ' class="sel"' : ''}><td>${esc(x)}</td>${cells}<td class="n">${n} of ${MONTHS.length}</td></tr>`;
+  });
+  rows.push(`<tr class="tot"><td>${esc(d)} completion</td>` + MONTHS.map(k => cell(tally(k, d))).join('') + '<td></td></tr>');
+  $('bmTable').tBodies[0].innerHTML = rows.join('');
+  $('foldBmNote').textContent = d + ', April 2026 to March 2027. Pending means the BRM is conducted but proceedings are not yet on the app.';
+}
+function renderAll(){ renderStats(); renderDistricts(); renderMatrix(); renderBlockMatrix(); renderBlocks(); writeSel(); }
 
 selM.addEventListener('change', renderAll);
 selD.addEventListener('change', () => { fillBlocks(selD.value); renderAll(); });
-selB.addEventListener('change', () => { renderBlocks(); writeSel(); });
+selB.addEventListener('change', () => { renderBlocks(); renderBlockMatrix(); writeSel(); });
 $('dTable').addEventListener('click', e => {
   const tr = e.target.closest('tr.dist'); if (!tr) return;
   selD.value = tr.dataset.d; fillBlocks(selD.value); renderAll();
@@ -1461,7 +1408,7 @@ $('bTable').addEventListener('change', e => {
   if (f === 'p') r.p = v;
   if (!r.c && !r.d && !r.p) { if (store[m]) delete store[m][d + '|' + b]; save(); } else setRec(m, d, b, r);
   tr.outerHTML = blockRow(m, d, b);
-  renderStats(); renderDistricts(); renderMatrix();
+  renderStats(); renderDistricts(); renderMatrix(); renderBlockMatrix();
 });
 
 let tt;
@@ -1608,6 +1555,16 @@ $('brmXlsx').addEventListener('click', e => busy(e.currentTarget, async () => {
   X.utils.book_append_sheet(wb, s1, 'Block status');
   X.utils.book_append_sheet(wb, s2, 'District summary');
   X.utils.book_append_sheet(wb, s3, 'Monthly completion');
+  // Sheet 4: monthly status of every block
+  const bm = [['District','Block', ...MONTHS.map(mLabel), 'Months complete']];
+  DISTS.forEach(d => BRM_BLOCKS[d].forEach(b => {
+    const st = MONTHS.map(k => status(rec(k, d, b)));
+    bm.push([d, b, ...st.map(s => CHIP[s]), st.filter(s => s === 'done').length]);
+  }));
+  const s4 = X.utils.aoa_to_sheet(bm);
+  s4['!cols'] = [{ wch: 18 }, { wch: 22 }, ...MONTHS.map(() => ({ wch: 19 })), { wch: 15 }];
+  s4['!autofilter'] = { ref: 'A1:' + X.utils.encode_col(MONTHS.length + 2) + bm.length };
+  X.utils.book_append_sheet(wb, s4, 'Block-wise monthly');
   const out = X.write(wb, { bookType: 'xlsx', type: 'array', cellDates: true });
   saveBlob(new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileStem(m) + '.xlsx');
   toast('Excel file downloaded');
